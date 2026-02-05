@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Vision Course</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container consent-container">
+        <div class="logo-header">
+            <i class="fas fa-robot"></i>
+            <h1 id="title">Computer Vision Course</h1>
+        </div>
+        
+        <div class="language-selector">
+            <button class="lang-btn active" data-lang="en">
+                <i class="fas fa-language"></i> English
+            </button>
+            <button class="lang-btn" data-lang="de">
+                <i class="fas fa-language"></i> Deutsch
+            </button>
+            <button class="lang-btn" data-lang="ru">
+                <i class="fas fa-language"></i> Русский
+            </button>
+        </div>
+
+        <img src="drone_image.png" alt="Drone Image" style="display: block; margin: 0 auto; width: 70%;">
+        <p><br></p>
+        <div class="consent-box">        
+            <div class="consent-text">
+                <h3 id="privacy-title">Privacy & Terms</h3>
+                <div id="privacy-text">
+                    <!-- Текст будет заполнен через JavaScript -->
+                </div>
+            </div>
+            
+            <button class="btn-agree" id="agree-btn">
+                <i class="fas fa-check-circle"></i>
+                <span id="agree-text">I Agree & Continue</span>
+            </button>
+        </div>
+        
+        <footer class="footer">
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>           
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

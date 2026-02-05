@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 6: Image Filtering</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson6-full-title">Lesson 6: Image Filtering</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-filter"></i> <span id="lesson6-concept-title">Cleaning Drone Photos</span></h2>
+                <p id="lesson6-concept-text">Real drone photos have noise from wind, movement, and camera quality. Filters clean images to see important details better. Like cleaning glasses to see clearly!</p>
+                
+                <div class="filters-grid">
+                    <div class="filter-item">
+                        <div class="filter-icon blur"></div>
+                        <h3>Blur Filter</h3>
+                        <p id="blur-text">Removes small noise. Makes photos smoother.</p>
+                    </div>
+                    <div class="filter-item">
+                        <div class="filter-icon sharpen"></div>
+                        <h3>Sharpen Filter</h3>
+                        <p id="sharpen-text">Makes edges clearer. See tree leaves better.</p>
+                    </div>
+                    <div class="filter-item">
+                        <div class="filter-icon edges"></div>
+                        <h3>Edge Detection</h3>
+                        <p id="edges-text">Finds object boundaries. Perfect for tree trunks.</p>
+                    </div>
+                    <div class="filter-item">
+                        <div class="filter-icon noise"></div>
+                        <h3>Noise Removal</h3>
+                        <p id="noise-text">Removes rain/snow from drone photos.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson6-commands-title">Filtering Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.GaussianBlur(image, (5,5), 0)</code>
+                        <p id="gaussian-text">Smooth blur. Removes small camera noise.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.medianBlur(image, 5)</code>
+                        <p id="median-text">Removes salt-and-pepper noise. Good for rain.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.Canny(image, 100, 200)</code>
+                        <p id="canny-text">Finds edges. See tree trunks clearly.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.bilateralFilter(image, 9, 75, 75)</code>
+                        <p id="bilateral-text">Smart blur. Keeps edges sharp.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson6-example-title">Drone Image Cleaner Program</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone Image Cleaner - Remove noise from forest photos
+import cv2
+import numpy as np
+
+print("=== Drone Image Cleaner ===")
+print("Mission: Clean noisy forest images for better analysis")
+
+# 1. Create noisy forest image (simulating wind-blown drone)
+height, width = 400, 600
+forest = np.zeros((height, width, 3), dtype=np.uint8)
+
+# Create forest with trees
+forest[:, :] = [34, 139, 34]  # Green background
+
+# Add trees (vertical rectangles)
+for i in range(20):
+    x = np.random.randint(50, 550)
+    y = np.random.randint(50, 350)
+    w = np.random.randint(10, 30)
+    h = np.random.randint(30, 100)
+    forest[y:y+h, x:x+w] = [0, 100, 0]
+
+# Add noise (simulating camera noise and wind)
+noise = np.random.randint(-30, 30, (height, width, 3), dtype=np.int16)
+noisy_forest = np.clip(forest.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+
+print("Created forest with 20 trees and added camera noise")
+cv2.imshow('1. Noisy Forest (Windy Day)', noisy_forest)
+
+# 2. GAUSSIAN BLUR - Simple smoothing
+gaussian = cv2.GaussianBlur(noisy_forest, (5, 5), 0)
+cv2.imshow('2. Gaussian Blur (Smooth)', gaussian)
+print("Applied Gaussian blur to reduce small noise")
+
+# 3. MEDIAN BLUR - Remove salt-and-pepper noise
+median = cv2.medianBlur(noisy_forest, 5)
+cv2.imshow('3. Median Blur (Remove Spots)', median)
+print("Applied median blur for spot removal")
+
+# 4. BILATERAL FILTER - Smart blur (keeps edges)
+bilateral = cv2.bilateralFilter(noisy_forest, 9, 75, 75)
+cv2.imshow('4. Bilateral Filter (Keep Edges)', bilateral)
+print("Applied bilateral filter - keeps tree edges sharp")
+
+# 5. CANNY EDGE DETECTION - Find tree trunks
+gray = cv2.cvtColor(bilateral, cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray, 50, 150)
+cv2.imshow('5. Canny Edges (Tree Trunks)', edges)
+print("Applied Canny edge detection to find tree trunks")
+
+# 6. SHARPENING - Make trees clearer
+kernel = np.array([[0, -1, 0],
+                   [-1, 5, -1],
+                   [0, -1, 0]])
+sharpened = cv2.filter2D(bilateral, -1, kernel)
+cv2.imshow('6. Sharpened (Clear Trees)', sharpened)
+print("Applied sharpening filter for clearer trees")
+
+# 7. COMPARE RESULTS
+comparison = np.zeros((height*2, width*2, 3), dtype=np.uint8)
+
+# Arrange 4 images in 2x2 grid
+comparison[0:height, 0:width] = noisy_forest
+comparison[0:height, width:width*2] = bilateral
+comparison[height:height*2, 0:width] = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+comparison[height:height*2, width:width*2] = sharpened
+
+# Add labels
+font = cv2.FONT_HERSHEY_SIMPLEX
+cv2.putText(comparison, 'Noisy Original', (10, 30), font, 0.7, (255,255,255), 2)
+cv2.putText(comparison, 'Cleaned (Bilateral)', (width+10, 30), font, 0.7, (255,255,255), 2)
+cv2.putText(comparison, 'Tree Edges', (10, height+30), font, 0.7, (255,255,255), 2)
+cv2.putText(comparison, 'Sharpened', (width+10, height+30), font, 0.7, (255,255,255), 2)
+
+cv2.imshow('7. Comparison: Before/After Filtering', comparison)
+
+print("\n=== Filter Analysis ===")
+print("Gaussian Blur: Best for general noise")
+print("Median Blur: Best for rain/snow removal")
+print("Bilateral: Best for keeping important edges")
+print("Canny: Best for finding object boundaries")
+
+print("\nPress any key to continue...")
+cv2.waitKey(0)
+
+# 8. REAL DRONE EXAMPLE: Count trees after filtering
+print("\n=== Tree Counting Simulation ===")
+
+# Create clean binary image of trees
+_, binary = cv2.threshold(edges, 50, 255, cv2.THRESH_BINARY)
+
+# Find contours (potential trees)
+contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Draw found trees
+tree_count_img = noisy_forest.copy()
+tree_count = 0
+
+for i, contour in enumerate(contours):
+    if cv2.contourArea(contour) > 50:  # Filter small noise
+        x, y, w, h = cv2.boundingRect(contour)
+        cv2.rectangle(tree_count_img, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        tree_count += 1
+
+cv2.putText(tree_count_img, f'Trees Found: {tree_count}', (20, 40), 
+            font, 1, (0, 0, 255), 2)
+
+cv2.imshow('8. Tree Count After Filtering', tree_count_img)
+print(f"Trees detected after filtering: {tree_count}")
+
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+print("\n=== Mission Complete ===")
+print("Filters help your drone see through noise!")
+print("Clean images = Better tree counting accuracy")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson6-practice-title">Practice: Remove Rain Noise</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor6" placeholder="Try using median blur to remove rain noise from drone photos..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn6">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn6">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message6"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-cloud-rain"></i> <span id="lesson6-real-title">Drone in Bad Weather:</span></h3>
+                    <p id="lesson6-real-text">Search drones work in rain using median blur to remove raindrops. Forest fire drones use edge detection through smoke. Your drone needs filters for clear vision in wind!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson5.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson7.html" class="btn-next">
+                    <span id="next-text">Next: Threshold Processing</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .filter-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--beige);
+            border-radius: 10px;
+            border: 1px solid var(--light-green);
+        }
+        
+        .filter-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-green);
+        }
+        
+        .filter-icon.blur {
+            background: linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+                        linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+                        linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+            background-size: 20px 20px;
+        }
+        
+        .filter-icon.sharpen {
+            background: repeating-linear-gradient(
+                45deg,
+                #000,
+                #000 2px,
+                #fff 2px,
+                #fff 4px
+            );
+        }
+        
+        .filter-icon.edges {
+            background: 
+                radial-gradient(circle at 30% 30%, #000 10%, transparent 10.5%),
+                radial-gradient(circle at 70% 70%, #000 10%, transparent 10.5%);
+            background-color: #fff;
+        }
+        
+        .filter-icon.noise {
+            background: 
+                radial-gradient(circle at 20% 50%, #000 2px, transparent 3px),
+                radial-gradient(circle at 40% 30%, #000 2px, transparent 3px),
+                radial-gradient(circle at 60% 70%, #000 2px, transparent 3px),
+                radial-gradient(circle at 80% 40%, #000 2px, transparent 3px);
+            background-color: #fff;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 6 в lang.js
+        if (!translations.en['lesson6-full-title']) {
+            Object.assign(translations.en, {
+                'lesson6-full-title': 'Lesson 6: Image Filtering',
+                'lesson6-concept-title': 'Cleaning Drone Photos',
+                'lesson6-concept-text': 'Real drone photos have noise from wind, movement, and camera quality. Filters clean images to see important details better. Like cleaning glasses to see clearly!',
+                'blur-text': 'Removes small noise. Makes photos smoother.',
+                'sharpen-text': 'Makes edges clearer. See tree leaves better.',
+                'edges-text': 'Finds object boundaries. Perfect for tree trunks.',
+                'noise-text': 'Removes rain/snow from drone photos.',
+                'lesson6-commands-title': 'Filtering Commands',
+                'gaussian-text': 'Smooth blur. Removes small camera noise.',
+                'median-text': 'Removes salt-and-pepper noise. Good for rain.',
+                'canny-text': 'Finds edges. See tree trunks clearly.',
+                'bilateral-text': 'Smart blur. Keeps edges sharp.',
+                'lesson6-example-title': 'Drone Image Cleaner Program',
+                'lesson6-practice-title': 'Practice: Remove Rain Noise',
+                'lesson6-real-title': 'Drone in Bad Weather:',
+                'lesson6-real-text': 'Search drones work in rain using median blur to remove raindrops. Forest fire drones use edge detection through smoke. Your drone needs filters for clear vision in wind!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson6-full-title': 'Lektion 6: Bildfilter',
+                'lesson6-concept-title': 'Drohnenfotos säubern',
+                'lesson6-concept-text': 'Echte Drohnenfotos haben Rauschen von Wind, Bewegung und Kameraqualität. Filter säubern Bilder, um wichtige Details besser zu sehen. Wie eine Brille putzen, um klar zu sehen!',
+                'blur-text': 'Entfernt kleines Rauschen. Macht Fotos glatter.',
+                'sharpen-text': 'Macht Kanten klarer. Baumblätter besser sehen.',
+                'edges-text': 'Findet Objektgrenzen. Perfekt für Baumstämme.',
+                'noise-text': 'Entfernt Regen/Schnee von Drohnenfotos.',
+                'lesson6-commands-title': 'Filtercommands',
+                'gaussian-text': 'Sanfte Unschärfe. Entfernt kleines Kamerarauschen.',
+                'median-text': 'Entfernt Salz-und-Pfeffer-Rauschen. Gut für Regen.',
+                'canny-text': 'Findet Kanten. Baumstämme klar sehen.',
+                'bilateral-text': 'Intelligente Unschärfe. Behält Kanten scharf.',
+                'lesson6-example-title': 'Drohnenbild-Reinigungsprogramm',
+                'lesson6-practice-title': 'Übung: Regenrauschen entfernen',
+                'lesson6-real-title': 'Drohne bei schlechtem Wetter:',
+                'lesson6-real-text': 'Suchdrohnen arbeiten im Regen mit Median-Filter, um Regentropfen zu entfernen. Waldbranddrohnen nutzen Kantenerkennung durch Rauch. Deine Drohne braucht Filter für klares Sehen bei Wind!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson6-full-title': 'Урок 6: Фильтрация изображений',
+                'lesson6-concept-title': 'Очистка фотографий с дрона',
+                'lesson6-concept-text': 'Настоящие фото с дрона имеют шум из-за ветра, движения и качества камеры. Фильтры очищают изображения, чтобы лучше видеть важные детали. Как почистить очки, чтобы видеть чётко!',
+                'blur-text': 'Удаляет мелкий шум. Делает фото более гладкими.',
+                'sharpen-text': 'Делает края чётче. Лучше видны листья деревьев.',
+                'edges-text': 'Находит границы объектов. Идеально для стволов деревьев.',
+                'noise-text': 'Удаляет дождь/снег с фото дрона.',
+                'lesson6-commands-title': 'Команды фильтрации',
+                'gaussian-text': 'Плавное размытие. Удаляет мелкий шум камеры.',
+                'median-text': 'Удаляет точечный шум ("соль-перец"). Хорошо для дождя.',
+                'canny-text': 'Находит края. Чётко видеть стволы деревьев.',
+                'bilateral-text': 'Умное размытие. Сохраняет края чёткими.',
+                'lesson6-example-title': 'Программа для очистки изображений с дрона',
+                'lesson6-practice-title': 'Практика: Удалить шум дождя',
+                'lesson6-real-title': 'Дрон в плохую погоду:',
+                'lesson6-real-text': 'Поисковые дроны работают в дождь, используя медианный фильтр для удаления капель. Дроны при лесных пожарах используют обнаружение краёв сквозь дым. Твоему дрону нужны фильтры для чёткого зрения на ветру!'
+            });
+        }
+        
+        document.getElementById('check-btn6')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor6').value;
+            const feedback = document.getElementById('feedback-message6');
+            
+            if (code.includes('cv2.medianBlur')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Perfect! Median blur is best for rain removal!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.GaussianBlur')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good! Gaussian blur helps, but try median for rain.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Try using median blur to remove rain noise.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn6')?.addEventListener('click', function() {
+            document.getElementById('code-editor6').value = '';
+            document.getElementById('feedback-message6').innerHTML = '';
+            document.getElementById('feedback-message6').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 6 как пройденный
+        markLessonComplete(6);
+    </script>
+</body>
+</html>

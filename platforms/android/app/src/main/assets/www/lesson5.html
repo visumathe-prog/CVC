@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 5: Basic Image Operations</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson5-full-title">Lesson 5: Basic Image Operations</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-crop-alt"></i> <span id="lesson5-concept-title">Drone Photo Editing</span></h2>
+                <p id="lesson5-concept-text">Sometimes drone photos need adjustments - too dark, wrong size, or you need just part of the image. These operations help prepare images for analysis.</p>
+                
+                <div class="operations-grid">
+                    <div class="operation-item">
+                        <div class="op-icon"><i class="fas fa-expand-alt"></i></div>
+                        <h3>Resize</h3>
+                        <p id="resize-text">Make images smaller for faster processing.</p>
+                    </div>
+                    <div class="operation-item">
+                        <div class="op-icon"><i class="fas fa-sync-alt"></i></div>
+                        <h3>Rotate</h3>
+                        <p id="rotate-text">Fix tilted drone photos.</p>
+                    </div>
+                    <div class="operation-item">
+                        <div class="op-icon"><i class="fas fa-crop"></i></div>
+                        <h3>Crop</h3>
+                        <p id="crop-text">Focus on important area like a single tree.</p>
+                    </div>
+                    <div class="operation-item">
+                        <div class="op-icon"><i class="fas fa-adjust"></i></div>
+                        <h3>Brightness/Contrast</h3>
+                        <p id="brightness-text">Fix dark forest photos.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson5-commands-title">Image Operation Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.resize(image, (new_width, new_height))</code>
+                        <p id="resize-cmd-text">Changes image size. Smaller images process faster on drones.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)</code>
+                        <p id="rotate-cmd-text">Rotates image. Fix photos when drone turns.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>image[y1:y2, x1:x2]</code>
+                        <p id="crop-cmd-text">Crops image. Get just the tree area from forest photo.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.addWeighted(image, alpha, zeros, beta, gamma)</code>
+                        <p id="brightness-cmd-text">Adjusts brightness and contrast. Fix dark drone photos.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson5-example-title">Drone Image Preprocessor</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone Image Preprocessor - Prepare photos for analysis
+import cv2
+import numpy as np
+
+print("=== Drone Image Preprocessor ===")
+print("Mission: Prepare forest images for tree counting")
+
+# 1. Create sample forest image
+height, width = 400, 600
+forest = np.zeros((height, width, 3), dtype=np.uint8)
+
+# Add forest elements
+forest[50:350, 100:500] = [34, 139, 34]    # Main forest
+forest[200:250, 300:350] = [0, 0, 255]      # Red marker (important tree)
+forest[100:120, 200:400] = [255, 255, 255]  # White path
+
+print(f"Original size: {width}x{height} pixels")
+
+# Show original
+cv2.imshow('1. Original Forest', forest)
+
+# 2. RESIZE - Make smaller for faster processing
+small_forest = cv2.resize(forest, (300, 200))  # (width, height)
+print(f"Resized to: 300x200 pixels (50% smaller)")
+cv2.imshow('2. Resized (Faster Processing)', small_forest)
+
+# 3. ROTATE - Fix tilted drone photo
+# Drones sometimes tilt when turning
+rotated_forest = cv2.rotate(forest, cv2.ROTATE_90_CLOCKWISE)
+print("Rotated 90 degrees clockwise")
+cv2.imshow('3. Rotated (Fixed Tilt)', rotated_forest)
+
+# 4. CROP - Focus on important area
+# Let's crop to see the red marker tree better
+tree_area = forest[180:280, 280:380]  # [y_start:y_end, x_start:x_end]
+print("Cropped to focus on red marker tree")
+cv2.imshow('4. Cropped (Tree Focus)', tree_area)
+
+# 5. BRIGHTNESS - Fix dark image
+# Forest photos can be dark under trees
+bright_forest = cv2.convertScaleAbs(forest, alpha=1.5, beta=50)
+# alpha = contrast (1.0 = normal, >1 = more contrast)
+# beta = brightness (0 = normal, >0 = brighter)
+print("Increased brightness for under-tree areas")
+cv2.imshow('5. Brightened (Better Visibility)', bright_forest)
+
+# 6. FLIP - Mirror image (sometimes useful)
+flipped_forest = cv2.flip(forest, 1)  # 1 = horizontal, 0 = vertical
+print("Flipped horizontally")
+cv2.imshow('6. Flipped (Mirror View)', flipped_forest)
+
+# 7. DRAW on image - Mark important areas
+marked_forest = forest.copy()
+# Draw rectangle around important tree
+cv2.rectangle(marked_forest, (290, 190), (360, 260), (0, 0, 255), 2)
+# Draw text
+cv2.putText(marked_forest, 'Important Tree', (280, 180), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+print("Marked important tree with rectangle and text")
+cv2.imshow('7. Marked (Annotations)', marked_forest)
+
+# 8. COMBINE operations - Real drone workflow
+# Typical drone processing pipeline:
+processed = forest.copy()
+processed = cv2.resize(processed, (450, 300))  # Step 1: Resize
+processed = cv2.rotate(processed, cv2.ROTATE_90_COUNTERCLOCKWISE)  # Step 2: Rotate
+processed = processed[50:250, 100:350]  # Step 3: Crop
+processed = cv2.convertScaleAbs(processed, alpha=1.3, beta=30)  # Step 4: Brightness
+
+print("\n=== Complete Processing Pipeline ===")
+print("1. Resize for speed")
+print("2. Rotate to correct orientation") 
+print("3. Crop to region of interest")
+print("4. Adjust brightness for analysis")
+cv2.imshow('8. Complete Pipeline Result', processed)
+
+print("\nPress any key to see summary...")
+cv2.waitKey(0)
+
+# Create summary collage
+summary_height = 300
+summary_width = 800
+summary = np.zeros((summary_height, summary_width, 3), dtype=np.uint8)
+
+# Place all operations in collage
+ops = [forest, small_forest, rotated_forest, tree_area, 
+       bright_forest, flipped_forest, marked_forest, processed]
+titles = ['Original', 'Resized', 'Rotated', 'Cropped', 
+          'Brightened', 'Flipped', 'Marked', 'Pipeline']
+
+for i, (img, title) in enumerate(zip(ops, titles)):
+    row = i // 4
+    col = i % 4
+    x_start = col * 200
+    y_start = row * 150
+    
+    # Resize to fit in collage
+    img_resized = cv2.resize(img, (190, 140))
+    summary[y_start:y_start+140, x_start:x_start+190] = img_resized
+    
+    # Add title
+    cv2.putText(summary, title, (x_start+5, y_start+130), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+cv2.imshow('Summary: All Operations', summary)
+print("\nAll operations displayed in summary collage")
+
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+print("\n=== Mission Complete ===")
+print("Your drone can now prepare images for analysis!")
+print("Next: Use these prepared images for tree detection.")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson5-practice-title">Practice: Create Your Own Pipeline</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor5" placeholder="Create a pipeline: resize, then rotate, then adjust brightness..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn5">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn5">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message5"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-mountain"></i> <span id="lesson5-real-title">Real Drone Mapping:</span></h3>
+                    <p id="lesson5-real-text">Survey drones take hundreds of photos. They resize them to save storage, rotate to align north, crop to remove sky/ground, and adjust brightness for consistent analysis. This preprocessing makes tree counting 10x faster!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson4.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson6.html" class="btn-next">
+                    <span id="next-text">Next: Image Filtering</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .operation-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--beige);
+            border-radius: 10px;
+            border: 1px solid var(--light-green);
+        }
+        
+        .op-icon {
+            font-size: 2rem;
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 5
+        if (!translations.en['lesson5-full-title']) {
+            Object.assign(translations.en, {
+                'lesson5-full-title': 'Lesson 5: Basic Image Operations',
+                'lesson5-concept-title': 'Drone Photo Editing',
+                'lesson5-concept-text': 'Sometimes drone photos need adjustments - too dark, wrong size, or you need just part of the image. These operations help prepare images for analysis.',
+                'resize-text': 'Make images smaller for faster processing.',
+                'rotate-text': 'Fix tilted drone photos.',
+                'crop-text': 'Focus on important area like a single tree.',
+                'brightness-text': 'Fix dark forest photos.',
+                'lesson5-commands-title': 'Image Operation Commands',
+                'resize-cmd-text': 'Changes image size. Smaller images process faster on drones.',
+                'rotate-cmd-text': 'Rotates image. Fix photos when drone turns.',
+                'crop-cmd-text': 'Crops image. Get just the tree area from forest photo.',
+                'brightness-cmd-text': 'Adjusts brightness and contrast. Fix dark drone photos.',
+                'lesson5-example-title': 'Drone Image Preprocessor',
+                'lesson5-practice-title': 'Practice: Create Your Own Pipeline',
+                'lesson5-real-title': 'Real Drone Mapping:',
+                'lesson5-real-text': 'Survey drones take hundreds of photos. They resize them to save storage, rotate to align north, crop to remove sky/ground, and adjust brightness for consistent analysis. This preprocessing makes tree counting 10x faster!'
+            });
+            
+            Object.assign(translations.de, {
+                'lesson5-full-title': 'Lektion 5: Grundlegende Bildoperationen',
+                'lesson5-concept-title': 'Drohnenfoto-Bearbeitung',
+                'lesson5-concept-text': 'Manchmal benötigen Drohnenfotos Anpassungen - zu dunkel, falsche Größe oder du benötigst nur einen Teil des Bildes. Diese Operationen helfen, Bilder für die Analyse vorzubereiten.',
+                'resize-text': 'Bilder verkleinern für schnellere Verarbeitung.',
+                'rotate-text': 'Geneigte Drohnenfotos korrigieren.',
+                'crop-text': 'Auf wichtigen Bereich wie einen einzelnen Baum fokussieren.',
+                'brightness-text': 'Dunkle Waldfotos korrigieren.',
+                'lesson5-commands-title': 'Bildoperations-Commands',
+                'resize-cmd-text': 'Ändert die Bildgröße. Kleinere Bilder werden auf Drohnen schneller verarbeitet.',
+                'rotate-cmd-text': 'Dreht das Bild. Korrigiert Fotos, wenn die Drohne sich dreht.',
+                'crop-cmd-text': 'Schneidet Bild zu. Hole nur den Baumbereich aus dem Waldbild.',
+                'brightness-cmd-text': 'Passt Helligkeit und Kontrast an. Korrigiert dunkle Drohnenfotos.',
+                'lesson5-example-title': 'Drohnenbild-Vorprozessor',
+                'lesson5-practice-title': 'Übung: Erstelle deine eigene Pipeline',
+                'lesson5-real-title': 'Echte Drohnenkartierung:',
+                'lesson5-real-text': 'Vermessungsdrohnen machen hunderte Fotos. Sie verkleinern sie, um Speicher zu sparen, drehen sie zur Nordausrichtung, schneiden Himmel/Boden ab und passen die Helligkeit für konsistente Analyse an. Diese Vorverarbeitung macht die Baumzählung 10x schneller!'
+            });
+            
+            Object.assign(translations.ru, {
+                'lesson5-full-title': 'Урок 5: Основные операции с изображениями',
+                'lesson5-concept-title': 'Редактирование фото дрона',
+                'lesson5-concept-text': 'Иногда фотографии с дрона нуждаются в корректировке - слишком тёмные, неправильного размера или нужна только часть изображения. Эти операции помогают подготовить изображения для анализа.',
+                'resize-text': 'Уменьшить изображения для более быстрой обработки.',
+                'rotate-text': 'Исправить наклонённые фотографии дрона.',
+                'crop-text': 'Сфокусироваться на важной области, например, на одном дереве.',
+                'brightness-text': 'Исправить тёмные фотографии леса.',
+                'lesson5-commands-title': 'Команды операций с изображениями',
+                'resize-cmd-text': 'Изменяет размер изображения. Меньшие изображения обрабатываются быстрее на дронах.',
+                'rotate-cmd-text': 'Поворачивает изображение. Исправляет фотографии при повороте дрона.',
+                'crop-cmd-text': 'Обрезает изображение. Получить только область дерева из фотографии леса.',
+                'brightness-cmd-text': 'Настраивает яркость и контраст. Исправляет тёмные фотографии дрона.',
+                'lesson5-example-title': 'Препроцессор изображений дрона',
+                'lesson5-practice-title': 'Практика: Создайте свой собственный конвейер',
+                'lesson5-real-title': 'Реальное картографирование дроном:',
+                'lesson5-real-text': 'Картографические дроны делают сотни фотографий. Они уменьшают их размер для экономии памяти, поворачивают для выравнивания по северу, обрезают, чтобы убрать небо/землю, и регулируют яркость для последовательного анализа. Эта предварительная обработка делает подсчёт деревьев в 10 раз быстрее!'
+            });
+        }
+        
+        document.getElementById('check-btn5')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor5').value;
+            const feedback = document.getElementById('feedback-message5');
+            
+            if (code.includes('cv2.resize') && code.includes('cv2.rotate')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent pipeline! Your drone photos are now ready for analysis!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.resize')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good start! Try adding rotation to fix drone tilt.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Start with cv2.resize to make images smaller for faster processing.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn5')?.addEventListener('click', function() {
+            document.getElementById('code-editor5').value = '';
+            document.getElementById('feedback-message5').innerHTML = '';
+            document.getElementById('feedback-message5').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 5 как пройденный
+        markLessonComplete(5);
+    </script>
+</body>
+</html>

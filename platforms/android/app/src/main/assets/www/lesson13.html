@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 13: Geo-Action Programming</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson13-full-title">Lesson 13: Geo-Action Programming</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-map-marker-alt"></i> <span id="lesson13-concept-title">Location-Based Actions</span></h2>
+                <p id="lesson13-concept-text">Drones can perform different actions at different locations: take photos at scenic spots, drop packages at addresses, or avoid restricted areas. This is how drones automate complex missions!</p>
+                
+                <div class="geo-actions">
+                    <div class="geo-item">
+                        <i class="fas fa-camera"></i>
+                        <h3>Photo at Location</h3>
+                        <p id="photo-action-text">Automatically take photo when drone reaches specific GPS coordinates</p>
+                    </div>
+                    <div class="geo-item">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Package Delivery</h3>
+                        <p id="delivery-text">Release package when drone is above delivery address</p>
+                    </div>
+                    <div class="geo-item">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>No-Fly Zones</h3>
+                        <p id="nofly-text">Automatically avoid airports, military bases, etc.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson13-commands-title">Geo-Action Concepts</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>distance = calculate_distance(current_gps, target_gps)</code>
+                        <p id="gps-distance-text">Calculate distance between two GPS coordinates.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>if distance < threshold: perform_action()</code>
+                        <p id="threshold-action-text">Check if close enough to target to perform action.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>waypoints = [(lat1, lon1), (lat2, lon2), ...]</code>
+                        <p id="waypoints-text">List of GPS coordinates for drone to visit.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>action_map = {location: function}</code>
+                        <p id="action-map-text">Map locations to specific action functions.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson13-example-title">Autonomous Drone Mission System</span></h2>
+                <div class="code-block">
+                    <pre><code># Autonomous Drone Mission System
+import numpy as np
+import cv2
+import math
+import time
+from datetime import datetime
+
+print("=== Autonomous Drone Mission System ===")
+print("Mission: Program location-based actions for drone")
+
+class GPSPosition:
+    """Simple GPS coordinate class"""
+    def __init__(self, lat, lon, alt=0):
+        self.latitude = lat
+        self.longitude = lon
+        self.altitude = alt
+    
+    def __str__(self):
+        return f"({self.latitude:.6f}, {self.longitude:.6f}, {self.altitude}m)"
+    
+    def distance_to(self, other):
+        """Calculate approximate distance in meters"""
+        # Simplified calculation (for demo purposes)
+        # In real applications, use Haversine formula
+        lat_diff = (self.latitude - other.latitude) * 111320  # meters per degree latitude
+        lon_diff = (self.longitude - other.longitude) * 111320 * math.cos(math.radians(self.latitude))
+        alt_diff = self.altitude - other.altitude
+        
+        return math.sqrt(lat_diff**2 + lon_diff**2 + alt_diff**2)
+
+class GeoAction:
+    """Base class for geographic actions"""
+    def __init__(self, location, name, trigger_distance=10):
+        self.location = location  # GPSPosition
+        self.name = name
+        self.trigger_distance = trigger_distance  # meters
+        self.executed = False
+        self.execution_time = None
+    
+    def should_trigger(self, current_position):
+        """Check if action should be triggered"""
+        distance = current_position.distance_to(self.location)
+        return distance <= self.trigger_distance and not self.executed
+    
+    def execute(self, drone):
+        """Execute the action"""
+        self.executed = True
+        self.execution_time = datetime.now()
+        print(f"[{self.execution_time.strftime('%H:%M:%S')}] Executing: {self.name}")
+        return True
+    
+    def get_status(self):
+        """Get action status"""
+        status = "✓ Executed" if self.executed else "⏳ Pending"
+        if self.executed and self.execution_time:
+            status += f" at {self.execution_time.strftime('%H:%M:%S')}"
+        return status
+
+class PhotoAction(GeoAction):
+    """Action: Take photo at location"""
+    def __init__(self, location, photo_name, **kwargs):
+        super().__init__(location, f"Take photo: {photo_name}", **kwargs)
+        self.photo_name = photo_name
+        self.photo_data = None
+    
+    def execute(self, drone):
+        super().execute(drone)
+        
+        # Simulate taking photo
+        print(f"  Taking photo: {self.photo_name}")
+        
+        # In real drone: drone.camera.capture()
+        # For simulation, create synthetic image
+        img = np.zeros((480, 640, 3), dtype=np.uint8)
+        
+        # Create scenic view based on location
+        img[:] = [135, 206, 235]  # Sky blue
+        
+        # Add ground
+        img[320:, :] = [34, 139, 34]  # Forest green
+        
+        # Add label
+        cv2.putText(img, self.photo_name, (50, 100),
+                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.putText(img, f"GPS: {self.location}", (50, 150),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(img, f"Time: {self.execution_time.strftime('%H:%M:%S')}", (50, 200),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        
+        # Add some scenery elements
+        if "mountain" in self.photo_name.lower():
+            # Draw mountain
+            pts = np.array([[200, 320], [320, 150], [440, 320]], np.int32)
+            cv2.fillPoly(img, [pts], (100, 100, 100))
+        elif "lake" in self.photo_name.lower():
+            # Draw lake
+            cv2.ellipse(img, (320, 380), (150, 50), 0, 0, 360, (70, 130, 180), -1)
+        else:
+            # Draw trees
+            for x in [150, 320, 490]:
+                cv2.circle(img, (x, 280), 40, (0, 100, 0), -1)
+                cv2.rectangle(img, (x-10, 280), (x+10, 320), (50, 30, 10), -1)
+        
+        self.photo_data = img
+        
+        # Save to file (in simulation)
+        filename = f"photo_{self.photo_name.replace(' ', '_')}.jpg"
+        cv2.imwrite(filename, img)
+        print(f"  Photo saved as: {filename}")
+        
+        # Show photo
+        cv2.imshow(f"Photo: {self.photo_name}", img)
+        cv2.waitKey(1000)  # Show for 1 second
+        
+        return True
+
+class DeliveryAction(GeoAction):
+    """Action: Deliver package at location"""
+    def __init__(self, location, package_id, recipient, **kwargs):
+        super().__init__(location, f"Deliver package {package_id} to {recipient}", **kwargs)
+        self.package_id = package_id
+        self.recipient = recipient
+    
+    def execute(self, drone):
+        super().execute(drone)
+        
+        print(f"  Delivering package {self.package_id}")
+        print(f"  Recipient: {self.recipient}")
+        print(f"  Location: {self.location}")
+        
+        # Simulate package release
+        print("  Lowering package...")
+        time.sleep(1)  # Simulate time to lower package
+        print("  Package released!")
+        print("  Returning to safe altitude...")
+        
+        return True
+
+class SurveyAction(GeoAction):
+    """Action: Survey area (fly in pattern)"""
+    def __init__(self, center_location, radius=50, **kwargs):
+        super().__init__(center_location, f"Survey area (radius: {radius}m)", **kwargs)
+        self.radius = radius
+        self.survey_points = []
+        self.survey_data = []
+    
+    def execute(self, drone):
+        super().execute(drone)
+        
+        print(f"  Starting area survey")
+        print(f"  Center: {self.location}")
+        print(f"  Radius: {self.radius}m")
+        
+        # Generate survey pattern (square spiral)
+        pattern_size = 5
+        survey_img = np.zeros((400, 400, 3), dtype=np.uint8)
+        survey_img[:] = [200, 220, 200]
+        
+        # Draw survey pattern
+        for i in range(pattern_size):
+            offset = i * 40
+            cv2.rectangle(survey_img, 
+                         (offset, offset), 
+                         (400-offset, 400-offset), 
+                         (0, 0, 255), 2)
+            
+            # Simulate data collection at each corner
+            for corner in [(offset, offset), (400-offset, offset),
+                          (400-offset, 400-offset), (offset, 400-offset)]:
+                cv2.circle(survey_img, corner, 5, (0, 255, 0), -1)
+                self.survey_points.append(corner)
+        
+        cv2.putText(survey_img, "Survey Pattern", (50, 50),
+                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.putText(survey_img, f"Points: {len(self.survey_points)}", (50, 100),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        
+        # Simulate data collection
+        print(f"  Collecting data at {len(self.survey_points)} points...")
+        for i, point in enumerate(self.survey_points):
+            # Simulate different sensor readings
+            temperature = 20 + np.random.normal(0, 2)
+            humidity = 60 + np.random.normal(0, 5)
+            
+            self.survey_data.append({
+                'point': i+1,
+                'position': point,
+                'temperature': temperature,
+                'humidity': humidity
+            })
+            
+            # Add data point to image
+            cv2.putText(survey_img, f"{temperature:.1f}C", 
+                       (point[0]-30, point[1]-10),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
+        
+        print(f"  Survey complete! Collected {len(self.survey_data)} data points")
+        
+        # Show survey results
+        cv2.imshow("Survey Results", survey_img)
+        cv2.waitKey(1500)
+        
+        return True
+
+class AvoidanceAction(GeoAction):
+    """Action: Avoid restricted area"""
+    def __init__(self, location, radius=100, reason="Restricted", **kwargs):
+        super().__init__(location, f"Avoid: {reason} (radius: {radius}m)", **kwargs)
+        self.radius = radius
+        self.reason = reason
+        self.trigger_distance = radius * 1.5  # Trigger before entering
+    
+    def execute(self, drone):
+        super().execute(drone)
+        
+        print(f"  ⚠️  APPROACHING RESTRICTED AREA!")
+        print(f"  Reason: {self.reason}")
+        print(f"  Restricted center: {self.location}")
+        print(f"  Restricted radius: {self.radius}m")
+        print(f"  Current distance: {drone.position.distance_to(self.location):.1f}m")
+        
+        # Calculate avoidance vector
+        to_restricted = np.array([
+            self.location.latitude - drone.position.latitude,
+            self.location.longitude - drone.position.longitude
+        ])
+        
+        distance = np.linalg.norm(to_restricted)
+        
+        if distance > 0:
+            # Normalize and get perpendicular direction
+            direction = to_restricted / distance
+            
+            # Get perpendicular vector (90 degree rotation)
+            avoid_direction = np.array([-direction[1], direction[0]])
+            
+            # Randomly choose left or right
+            if np.random.random() > 0.5:
+                avoid_direction = -avoid_direction
+            
+            print(f"  Taking evasive action: {'Right' if avoid_direction[0] > 0 else 'Left'} turn")
+            
+            # Calculate new waypoint
+            avoid_distance = self.radius * 1.2
+            new_lat = drone.position.latitude + avoid_direction[0] * avoid_distance / 111320
+            new_lon = drone.position.longitude + avoid_direction[1] * avoid_distance / (111320 * math.cos(math.radians(drone.position.latitude)))
+            
+            new_waypoint = GPSPosition(new_lat, new_lon, drone.position.altitude)
+            
+            print(f"  New waypoint: {new_waypoint}")
+            
+            # In real drone: drone.set_waypoint(new_waypoint)
+            drone.waypoints.insert(0, new_waypoint)  # Add as next waypoint
+        
+        return True
+
+class AutonomousDrone:
+    """Simulated autonomous drone"""
+    def __init__(self, start_position):
+        self.position = start_position
+        self.waypoints = []
+        self.speed = 10  # meters per second
+        self.actions = []
+        self.mission_log = []
+        self.current_waypoint_index = 0
+    
+    def add_action(self, action):
+        """Add geo-action to mission"""
+        self.actions.append(action)
+        print(f"Added action: {action.name} at {action.location}")
+    
+    def add_waypoint(self, waypoint):
+        """Add waypoint to route"""
+        self.waypoints.append(waypoint)
+    
+    def update_position(self, dt):
+        """Update drone position (simulation)"""
+        if self.current_waypoint_index < len(self.waypoints):
+            target = self.waypoints[self.current_waypoint_index]
+            
+            # Calculate direction
+            lat_diff = target.latitude - self.position.latitude
+            lon_diff = target.longitude - self.position.longitude
+            
+            distance = self.position.distance_to(target)
+            
+            if distance > 0:
+                # Move toward waypoint
+                move_distance = min(self.speed * dt, distance)
+                
+                self.position.latitude += lat_diff * (move_distance / distance)
+                self.position.longitude += lon_diff * (move_distance / distance)
+                
+                if distance <= move_distance:
+                    # Reached waypoint
+                    print(f"  Reached waypoint {self.current_waypoint_index+1}: {target}")
+                    self.current_waypoint_index += 1
+            else:
+                # Already at waypoint
+                self.current_waypoint_index += 1
+    
+    def check_actions(self):
+        """Check and execute triggered actions"""
+        executed_actions = []
+        
+        for action in self.actions:
+            if action.should_trigger(self.position):
+                if action.execute(self):
+                    executed_actions.append(action)
+                    self.mission_log.append({
+                        'time': datetime.now(),
+                        'action': action.name,
+                        'location': self.position
+                    })
+        
+        # Remove executed avoidance actions (they modify waypoints)
+        self.actions = [a for a in self.actions if not (isinstance(a, AvoidanceAction) and a.executed)]
+        
+        return executed_actions
+    
+    def get_status(self):
+        """Get current drone status"""
+        status = f"Position: {self.position}\n"
+        status += f"Waypoint: {self.current_waypoint_index+1}/{len(self.waypoints)}\n"
+        
+        if self.waypoints and self.current_waypoint_index < len(self.waypoints):
+            target = self.waypoints[self.current_waypoint_index]
+            distance = self.position.distance_to(target)
+            status += f"Distance to next: {distance:.1f}m\n"
+        
+        status += f"Speed: {self.speed} m/s\n"
+        status += f"Actions pending: {len([a for a in self.actions if not a.executed])}\n"
+        
+        return status
+
+def create_sample_mission():
+    """Create sample autonomous mission"""
+    print("\n=== Creating Sample Mission ===")
+    
+    # Define mission locations (simulated GPS coordinates)
+    # Note: These are not real GPS, just for demonstration
+    locations = {
+        'start': GPSPosition(47.3769, 8.5417, 100),  # Zurich, 100m altitude
+        'scenic_view': GPSPosition(47.3775, 8.5425, 120),
+        'delivery_house': GPSPosition(47.3780, 8.5430, 100),
+        'restricted_area': GPSPosition(47.3785, 8.5435, 100),
+        'survey_area': GPSPosition(47.3790, 8.5440, 150),
+        'lake_view': GPSPosition(47.3795, 8.5445, 130),
+        'end': GPSPosition(47.3800, 8.5450, 100)
+    }
+    
+    # Create drone
+    drone = AutonomousDrone(locations['start'])
+    
+    # Add waypoints
+    waypoint_order = ['scenic_view', 'delivery_house', 'survey_area', 'lake_view', 'end']
+    for wp in waypoint_order:
+        drone.add_waypoint(locations[wp])
+    
+    print(f"Added {len(waypoint_order)} waypoints")
+    
+    # Add geo-actions
+    drone.add_action(PhotoAction(
+        locations['scenic_view'],
+        "Mountain View",
+        trigger_distance=15
+    ))
+    
+    drone.add_action(DeliveryAction(
+        locations['delivery_house'],
+        package_id="PKG-2023-001",
+        recipient="John Smith",
+        trigger_distance=10
+    ))
+    
+    drone.add_action(AvoidanceAction(
+        locations['restricted_area'],
+        radius=80,
+        reason="No-Fly Zone (Airport)",
+        trigger_distance=120
+    ))
+    
+    drone.add_action(SurveyAction(
+        locations['survey_area'],
+        radius=100,
+        trigger_distance=20
+    ))
+    
+    drone.add_action(PhotoAction(
+        locations['lake_view'],
+        "Lake Panorama",
+        trigger_distance=15
+    ))
+    
+    print(f"Added {len(drone.actions)} geo-actions")
+    
+    return drone, locations
+
+def run_mission_simulation(drone, mission_duration=60):
+    """Run the autonomous mission simulation"""
+    print("\n" + "="*50)
+    print("STARTING AUTONOMOUS MISSION")
+    print("="*50)
+    
+    print("\nMission Objectives:")
+    print("1. Fly to scenic view and take photo")
+    print("2. Deliver package to house")
+    print("3. Avoid restricted area")
+    print("4. Survey area for data collection")
+    print("5. Take lake panorama photo")
+    print("6. Return to end point")
+    
+    print("\nDrone initialized:")
+    print(drone.get_status())
+    
+    print("\nPress Enter to start mission...")
+    input()
+    
+    # Mission simulation loop
+    dt = 1  # Time step in seconds
+    elapsed_time = 0
+    mission_complete = False
+    
+    # Create mission visualization
+    vis_width, vis_height = 800, 600
+    visualization = np.zeros((vis_height, vis_width, 3), dtype=np.uint8)
+    
+    # Mission statistics
+    actions_completed = 0
+    
+    print("\n=== Mission in Progress ===")
+    
+    while elapsed_time < mission_duration and not mission_complete:
+        # Clear visualization
+        visualization[:] = [40, 40, 60]
+        
+        # Update drone position
+        drone.update_position(dt)
+        
+        # Check and execute actions
+        executed = drone.check_actions()
+        if executed:
+            actions_completed += len(executed)
+            for action in executed:
+                print(f"[Mission Log] {action.name}")
+        
+        # Update visualization
+        # Draw map grid
+        grid_color = (80, 80, 100)
+        for x in range(0, vis_width, 50):
+            cv2.line(visualization, (x, 0), (x, vis_height), grid_color, 1)
+        for y in range(0, vis_height, 50):
+            cv2.line(visualization, (0, y), (vis_width, y), grid_color, 1)
+        
+        # Draw drone position (simplified - using elapsed_time for x position)
+        drone_x = int((elapsed_time / mission_duration) * (vis_width - 100)) + 50
+        drone_y = vis_height // 2
+        
+        # Draw drone
+        cv2.circle(visualization, (drone_x, drone_y), 15, (0, 255, 0), -1)
+        cv2.circle(visualization, (drone_x, drone_y), 15, (255, 255, 255), 2)
+        
+        # Draw propeller animation
+        prop_angle = elapsed_time * 20
+        prop_radius = 25
+        prop1_x = int(drone_x + prop_radius * math.cos(math.radians(prop_angle)))
+        prop1_y = int(drone_y + prop_radius * math.sin(math.radians(prop_angle)))
+        prop2_x = int(drone_x + prop_radius * math.cos(math.radians(prop_angle + 180)))
+        prop2_y = int(drone_y + prop_radius * math.sin(math.radians(prop_angle + 180)))
+        
+        cv2.line(visualization, (prop1_x, prop1_y), (prop2_x, prop2_y), (200, 200, 100), 2)
+        
+        # Draw action markers
+        action_y = 100
+        for i, action in enumerate(drone.actions):
+            if i < 5:  # Show first 5 actions
+                color = (0, 255, 0) if action.executed else (100, 100, 100)
+                marker_x = 50
+                marker_y = action_y + i * 40
+                
+                cv2.circle(visualization, (marker_x, marker_y), 5, color, -1)
+                cv2.putText(visualization, action.name[:30], 
+                           (marker_x + 15, marker_y + 5),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+        
+        # Draw status
+        status_text = f"Mission Time: {elapsed_time:.0f}s / {mission_duration}s"
+        cv2.putText(visualization, status_text, (vis_width - 300, 50),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        
+        cv2.putText(visualization, drone.get_status(), (vis_width - 300, 100),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 255), 1)
+        
+        # Draw mission progress
+        progress = elapsed_time / mission_duration
+        cv2.rectangle(visualization, (50, vis_height - 50), (vis_width - 50, vis_height - 30), (100, 100, 100), -1)
+        cv2.rectangle(visualization, (50, vis_height - 50), 
+                     (int(50 + (vis_width - 100) * progress), vis_height - 30), 
+                     (0, 255, 0), -1)
+        
+        cv2.putText(visualization, "Mission Progress", (50, vis_height - 60),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        
+        # Show visualization
+        cv2.imshow('Autonomous Mission Simulation', visualization)
+        cv2.waitKey(100)  # 10 FPS
+        
+        # Check mission completion
+        if drone.current_waypoint_index >= len(drone.waypoints):
+            mission_complete = True
+            print("\n✅ All waypoints reached!")
+        
+        elapsed_time += dt
+    
+    print("\n" + "="*50)
+    print("MISSION COMPLETE")
+    print("="*50)
+    
+    # Mission report
+    print(f"\nMission Duration: {elapsed_time:.1f} seconds")
+    print(f"Waypoints visited: {drone.current_waypoint_index}/{len(drone.waypoints)}")
+    print(f"Actions completed: {actions_completed}/{len(drone.actions)}")
+    
+    print("\nAction Summary:")
+    for action in drone.actions:
+        print(f"  {action.get_status()}: {action.name}")
+    
+    print("\nMission Log:")
+    for log in drone.mission_log[-5:]:  # Show last 5 entries
+        print(f"  {log['time'].strftime('%H:%M:%S')}: {log['action']}")
+    
+    cv2.waitKey(2000)  # Show final visualization for 2 seconds
+    cv2.destroyAllWindows()
+    
+    return drone
+
+def real_world_geo_actions():
+    """Real-world geo-action examples"""
+    print("\n" + "="*50)
+    print("REAL-WORLD GEO-ACTION APPLICATIONS")
+    print("="*50)
+    
+    print("\n1. AGRICULTURE:")
+    print("   • Spray pesticides only in infected areas")
+    print("   • Take soil samples at specific coordinates")
+    print("   • Monitor crop health at fixed points")
+    
+    print("\n2. DELIVERY SERVICES:")
+    print("   • Drop packages at exact GPS coordinates")
+    print("   • Avoid no-fly zones automatically")
+    print("   • Take delivery confirmation photos")
+    
+    print("\n3. SEARCH & RESCUE:")
+    print("   • Mark found items/persons with GPS")
+    print("   • Search predefined grid patterns")
+    print("   • Avoid dangerous terrain")
+    
+    print("\n4. CONSTRUCTION:")
+    print("   • Inspect specific structural points")
+    print("   • Monitor progress at fixed locations")
+    print("   • Avoid collision with cranes/equipment")
+    
+    print("\nCode example for precision agriculture:")
+    print("""
+def precision_spraying_mission(field_map, infected_areas):
+    drone = AutonomousDrone(field_map.start_point)
+    
+    # Add waypoints for field coverage
+    for row in field_map.get_spraying_pattern():
+        drone.add_waypoint(row['start'])
+        drone.add_waypoint(row['end'])
+    
+    # Add spraying actions only at infected areas
+    for area in infected_areas:
+        action = SprayAction(
+            location=area['center'],
+            spray_type=area['pesticide'],
+            duration=area['duration']
+        )
+        drone.add_action(action)
+    
+    # Add no-spray zones (water sources, houses)
+    for zone in field_map.no_spray_zones:
+        action = AvoidanceAction(
+            location=zone['center'],
+            radius=zone['radius'],
+            reason=zone['reason']
+        )
+        drone.add_action(action)
+    
+    return drone
+    """)
+
+# Main execution
+if __name__ == "__main__":
+    print("Starting Autonomous Drone Mission System...")
+    
+    # Create and run sample mission
+    drone, locations = create_sample_mission()
+    completed_drone = run_mission_simulation(drone, mission_duration=45)
+    
+    # Show real-world applications
+    real_world_geo_actions()
+    
+    print("\n" + "="*50)
+    print("GEO-ACTION PROGRAMMING SUMMARY")
+    print("="*50)
+    
+    print("\nKey concepts:")
+    print("• GPS coordinates define action locations")
+    print("• Trigger distance determines when action executes")
+    print("• Different action types for different tasks")
+    print("• Mission planning combines waypoints and actions")
+    
+    print("\nBest practices:")
+    print("1. Always include safety margins around obstacles")
+    print("2. Test missions in simulation before real flight")
+    print("3. Include emergency procedures")
+    print("4. Log all actions for mission review")
+    
+    print("\nPress Enter to exit...")
+    input()
+    
+    print("\n=== Mission Complete ===")
+    print("Your drone can now perform location-based actions!")
+    print("This enables complex autonomous missions")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson13-practice-title">Practice: Add New Action Type</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor13" placeholder="Try creating a new action type, like 'AudioRecordingAction'..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn13">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn13">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message13"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-seedling"></i> <span id="lesson13-real-title">Precision Agriculture:</span></h3>
+                    <p id="lesson13-real-text">Farmers program drones to spray pesticides only where needed, saving 90% of chemicals. Each plant gets GPS-tagged health data. Your drone could automate garden care!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson12.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson14.html" class="btn-next">
+                    <span id="next-text">Next: Final Instructions</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .geo-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .geo-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            border: 2px solid var(--light-green);
+        }
+        
+        .geo-item i {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 13
+        if (!translations.en['lesson13-full-title']) {
+            Object.assign(translations.en, {
+                'lesson13-full-title': 'Lesson 13: Geo-Action Programming',
+                'lesson13-concept-title': 'Location-Based Actions',
+                'lesson13-concept-text': 'Drones can perform different actions at different locations: take photos at scenic spots, drop packages at addresses, or avoid restricted areas. This is how drones automate complex missions!',
+                'photo-action-text': 'Automatically take photo when drone reaches specific GPS coordinates',
+                'delivery-text': 'Release package when drone is above delivery address',
+                'nofly-text': 'Automatically avoid airports, military bases, etc.',
+                'lesson13-commands-title': 'Geo-Action Concepts',
+                'gps-distance-text': 'Calculate distance between two GPS coordinates.',
+                'threshold-action-text': 'Check if close enough to target to perform action.',
+                'waypoints-text': 'List of GPS coordinates for drone to visit.',
+                'action-map-text': 'Map locations to specific action functions.',
+                'lesson13-example-title': 'Autonomous Drone Mission System',
+                'lesson13-practice-title': 'Practice: Add New Action Type',
+                'lesson13-real-title': 'Precision Agriculture:',
+                'lesson13-real-text': 'Farmers program drones to spray pesticides only where needed, saving 90% of chemicals. Each plant gets GPS-tagged health data. Your drone could automate garden care!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson13-full-title': 'Lektion 13: Geo-Aktions',
+                'lesson13-concept-title': 'Standortbasierte Aktionen',
+                'lesson13-concept-text': 'Drohnen können an verschiedenen Orten unterschiedliche Aktionen ausführen: Fotos an schönen Orten machen, Pakete an Adressen abwerfen oder Sperrgebiete meiden. So automatisieren Drohnen komplexe Missionen!',
+                'photo-action-text': 'Automatisch Foto machen, wenn Drohne bestimmte GPS-Koordinaten erreicht',
+                'delivery-text': 'Paket freigeben, wenn Drohne über Lieferadresse ist',
+                'nofly-text': 'Automatisch Flughäfen, Militärbasen etc. meiden',
+                'lesson13-commands-title': 'Geo-Aktions Commands',
+                'gps-distance-text': 'Entfernung zwischen zwei GPS-Koordinaten berechnen.',
+                'threshold-action-text': 'Prüfen, ob nah genug am Ziel, um Aktion auszuführen.',
+                'waypoints-text': 'Liste von GPS-Koordinaten, die die Drohne besuchen soll.',
+                'action-map-text': 'Orte bestimmten Aktionsfunktionen zuordnen.',
+                'lesson13-example-title': 'Autonomes Drohnen-Missionssystem',
+                'lesson13-practice-title': 'Übung: Neuen Aktionstyp hinzufügen',
+                'lesson13-real-title': 'Präzisionslandwirtschaft:',
+                'lesson13-real-text': 'Landwirte programmieren Drohnen, Pestizide nur dort zu sprühen, wo nötig, und sparen 90% der Chemikalien. Jede Pflanze erhält GPS-markierte Gesundheitsdaten. Deine Drohne könnte Gartenpflege automatisieren!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson13-full-title': 'Урок 13: Гео-действия',
+                'lesson13-concept-title': 'Действия по местоположению',
+                'lesson13-concept-text': 'Дроны могут выполнять разные действия в разных местах: делать фото в красивых местах, сбрасывать посылки по адресам или избегать запретных зон. Так дроны автоматизируют сложные миссии!',
+                'photo-action-text': 'Автоматически делать фото, когда дрон достигает определённых GPS-координат',
+                'delivery-text': 'Выпустить посылку, когда дрон над адресом доставки',
+                'nofly-text': 'Автоматически избегать аэропорты, военные базы и т.д.',
+                'lesson13-commands-title': 'Концепции гео-действий',
+                'gps-distance-text': 'Вычислить расстояние между двумя GPS-координатами.',
+                'threshold-action-text': 'Проверить, достаточно ли близко к цели, чтобы выполнить действие.',
+                'waypoints-text': 'Список GPS-координат, которые дрон должен посетить.',
+                'action-map-text': 'Сопоставить местоположения конкретным функциям-действиям.',
+                'lesson13-example-title': 'Система автономной миссии дрона',
+                'lesson13-practice-title': 'Практика: Добавить новый тип действия',
+                'lesson13-real-title': 'Точное земледелие:',
+                'lesson13-real-text': 'Фермеры программируют дронов распылять пестициды только там, где нужно, экономя 90% химикатов. Каждое растение получает данные о здоровье с GPS-меткой. Твой дрон мог бы автоматизировать уход за садом!'
+            });
+        }
+        
+        document.getElementById('check-btn13')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor13').value;
+            const feedback = document.getElementById('feedback-message13');
+            
+            if (code.includes('class') && code.includes('execute') && code.includes('GeoAction')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent! Your drone can now perform custom actions!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('class') && code.includes('def')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good class structure! Now add execute method.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Try creating a new class that extends GeoAction.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn13')?.addEventListener('click', function() {
+            document.getElementById('code-editor13').value = '';
+            document.getElementById('feedback-message13').innerHTML = '';
+            document.getElementById('feedback-message13').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 13 как пройденный
+        markLessonComplete(13);
+    </script>
+</body>
+</html>

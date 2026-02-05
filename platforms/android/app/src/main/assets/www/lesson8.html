@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 8: Contours & Morphological Operations</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson8-full-title">Lesson 8: Contours & Morphology</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-draw-polygon"></i> <span id="lesson8-concept-title">Finding Object Shapes</span></h2>
+                <p id="lesson8-concept-text">Contours are like drawing lines around objects. Morphology cleans up the shapes. Your drone uses this to find exact tree shapes and remove noise.</p>
+                
+                <div class="morphology-demo">
+                    <div class="morph-item">
+                        <div class="morph-visual erosion"></div>
+                        <h3>Erosion</h3>
+                        <p id="erosion-text">Shrinks white areas. Removes small noise.</p>
+                    </div>
+                    <div class="morph-item">
+                        <div class="morph-visual dilation"></div>
+                        <h3>Dilation</h3>
+                        <p id="dilation-text">Grows white areas. Connects broken parts.</p>
+                    </div>
+                    <div class="morph-item">
+                        <div class="morph-visual opening"></div>
+                        <h3>Opening</h3>
+                        <p id="opening-text">Erosion then dilation. Removes small spots.</p>
+                    </div>
+                    <div class="morph-item">
+                        <div class="morph-visual closing"></div>
+                        <h3>Closing</h3>
+                        <p id="closing-text">Dilation then erosion. Fills small holes.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson8-commands-title">Contour & Morphology Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)</code>
+                        <p id="findcontours-text">Finds all objects in binary image. Returns list of contours.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.contourArea(contour)</code>
+                        <p id="contourarea-text">Calculates area inside contour. Filters small/large objects.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.erode(image, kernel, iterations=1)</code>
+                        <p id="erode-text">Erosion: Shrinks white objects. Good for noise removal.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.dilate(image, kernel, iterations=1)</code>
+                        <p id="dilate-text">Dilation: Expands white objects. Connects nearby objects.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson8-example-title">Advanced Tree Detection System</span></h2>
+                <div class="code-block">
+                    <pre><code># Advanced Tree Detection with Contours & Morphology
+import cv2
+import numpy as np
+
+print("=== Advanced Tree Detection System ===")
+print("Mission: Find exact tree shapes and measure them")
+
+# 1. Create realistic forest scene with noise
+height, width = 500, 700
+forest = np.zeros((height, width), dtype=np.uint8)
+
+# Create trees of different sizes
+tree_positions = []
+for i in range(20):
+    x = np.random.randint(50, 650)
+    y = np.random.randint(50, 450)
+    size = np.random.randint(15, 40)
+    tree_positions.append((x, y, size))
+    cv2.circle(forest, (x, y), size, 200, -1)
+
+# Add noise (small white spots and black holes)
+noise = np.random.randint(0, 100, (height, width), dtype=np.uint8)
+forest = cv2.add(forest, noise)
+
+# Add holes in some trees (simulating gaps between leaves)
+for i in range(5):
+    x, y, size = tree_positions[i]
+    hole_size = size // 3
+    cv2.circle(forest, (x, y), hole_size, 0, -1)
+
+print("Created forest with 20 trees, noise, and gaps")
+cv2.imshow('1. Noisy Forest with Gaps', forest)
+
+# 2. Threshold to binary
+_, binary = cv2.threshold(forest, 100, 255, cv2.THRESH_BINARY)
+cv2.imshow('2. Binary Forest', binary)
+
+# 3. MORPHOLOGICAL OPERATIONS to clean image
+kernel = np.ones((3,3), np.uint8)
+
+# 3a. EROSION - Remove small noise
+eroded = cv2.erode(binary, kernel, iterations=1)
+cv2.imshow('3a. After Erosion (Noise Removed)', eroded)
+
+# 3b. DILATION - Regrow trees
+dilated = cv2.dilate(eroded, kernel, iterations=2)
+cv2.imshow('3b. After Dilation (Trees Regrown)', dilated)
+
+# 3c. CLOSING - Fill holes in trees
+closing = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+cv2.imshow('3c. After Closing (Holes Filled)', closing)
+
+# 3d. OPENING - Remove small spots
+opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+cv2.imshow('3d. After Opening (Spots Removed)', opening)
+
+# 4. BEST COMBINATION: Opening then Closing
+clean = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+clean = cv2.morphologyEx(clean, cv2.MORPH_CLOSE, kernel, iterations=2)
+cv2.imshow('4. Cleaned Forest (Opening+Closing)', clean)
+
+print("\n=== Morphology Results ===")
+print("Erosion: Removed small noise spots")
+print("Dilation: Made trees bigger after erosion")
+print("Closing: Filled holes inside trees")
+print("Opening: Removed small white spots between trees")
+
+# 5. FIND CONTOURS on cleaned image
+contours, hierarchy = cv2.findContours(clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+print(f"\nFound {len(contours)} potential tree contours")
+
+# 6. ANALYZE CONTOURS
+result_img = cv2.cvtColor(forest, cv2.COLOR_GRAY2BGR)
+valid_trees = []
+tree_stats = []
+
+for i, contour in enumerate(contours):
+    area = cv2.contourArea(contour)
+    
+    # Filter by size (remove too small or too large)
+    if 500 < area < 5000:
+        # Get bounding rectangle
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Calculate circularity (how close to circle)
+        perimeter = cv2.arcLength(contour, True)
+        if perimeter > 0:
+            circularity = 4 * np.pi * area / (perimeter * perimeter)
+        else:
+            circularity = 0
+        
+        # Only accept circle-like shapes (trees are usually round)
+        if circularity > 0.5:
+            valid_trees.append(contour)
+            
+            # Store statistics
+            tree_stats.append({
+                'id': len(valid_trees),
+                'area': area,
+                'center': (x + w//2, y + h//2),
+                'radius': int(np.sqrt(area / np.pi)),
+                'circularity': circularity
+            })
+            
+            # Draw on result image
+            color = (0, 255, 0) if circularity > 0.7 else (0, 200, 200)
+            
+            # Draw contour
+            cv2.drawContours(result_img, [contour], -1, color, 2)
+            
+            # Draw bounding circle
+            center = (x + w//2, y + h//2)
+            radius = int(np.sqrt(area / np.pi))
+            cv2.circle(result_img, center, radius, (0, 0, 255), 2)
+            
+            # Draw center point
+            cv2.circle(result_img, center, 3, (255, 0, 0), -1)
+            
+            # Add tree number
+            cv2.putText(result_img, str(len(valid_trees)), 
+                       (center[0]-10, center[1]), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+print(f"\nAfter filtering: {len(valid_trees)} valid trees found")
+
+# 7. DISPLAY TREE STATISTICS
+# Create statistics visualization
+stats_img = np.zeros((400, 600, 3), dtype=np.uint8)
+stats_img[:] = (40, 40, 40)
+
+font = cv2.FONT_HERSHEY_SIMPLEX
+y_pos = 40
+line_height = 30
+
+cv2.putText(stats_img, "=== TREE STATISTICS ===", (20, y_pos), font, 0.7, (0, 255, 255), 2)
+y_pos += line_height * 2
+
+cv2.putText(stats_img, f"Total trees detected: {len(valid_trees)}", (20, y_pos), font, 0.6, (255, 255, 255), 1)
+y_pos += line_height
+
+# Show individual tree stats
+for i, stat in enumerate(tree_stats[:10]):  # Show first 10
+    text = f"Tree {stat['id']}: Area={stat['area']:.0f}, Radius={stat['radius']}px"
+    cv2.putText(stats_img, text, (20, y_pos), font, 0.5, (200, 200, 255), 1)
+    y_pos += line_height
+
+if len(tree_stats) > 10:
+    cv2.putText(stats_img, f"... and {len(tree_stats)-10} more trees", 
+               (20, y_pos), font, 0.5, (200, 200, 255), 1)
+    y_pos += line_height
+
+# Calculate average statistics
+if tree_stats:
+    avg_area = np.mean([s['area'] for s in tree_stats])
+    avg_circ = np.mean([s['circularity'] for s in tree_stats])
+    
+    cv2.putText(stats_img, f"Average area: {avg_area:.0f} pixels", 
+               (20, y_pos+20), font, 0.6, (0, 255, 0), 1)
+    cv2.putText(stats_img, f"Average circularity: {avg_circ:.2f} (1.0=perfect circle)", 
+               (20, y_pos+50), font, 0.6, (0, 255, 0), 1)
+
+cv2.imshow('5. Tree Detection Results', result_img)
+cv2.imshow('6. Tree Statistics', stats_img)
+
+# 8. CREATE FOREST MAP
+print("\n=== Creating Forest Map ===")
+map_img = np.zeros((height, width, 3), dtype=np.uint8)
+map_img[:] = (20, 60, 20)  # Dark green background
+
+# Draw trees on map
+for stat in tree_stats:
+    center = stat['center']
+    radius = stat['radius']
+    
+    # Color by size
+    if stat['area'] > 2000:
+        color = (0, 0, 255)  # Red for large trees
+    elif stat['area'] > 1000:
+        color = (0, 255, 255)  # Yellow for medium trees
+    else:
+        color = (0, 255, 0)  # Green for small trees
+    
+    cv2.circle(map_img, center, radius, color, -1)
+    cv2.circle(map_img, center, 2, (255, 255, 255), -1)  # White center
+
+# Add grid
+grid_color = (100, 100, 100)
+for x in range(0, width, 50):
+    cv2.line(map_img, (x, 0), (x, height), grid_color, 1)
+for y in range(0, height, 50):
+    cv2.line(map_img, (0, y), (width, y), grid_color, 1)
+
+# Add legend
+cv2.putText(map_img, "Forest Map", (20, 30), font, 1, (255, 255, 255), 2)
+cv2.putText(map_img, "Large trees", (20, 70), font, 0.6, (0, 0, 255), 1)
+cv2.putText(map_img, "Medium trees", (20, 100), font, 0.6, (0, 255, 255), 1)
+cv2.putText(map_img, "Small trees", (20, 130), font, 0.6, (0, 255, 0), 1)
+
+cv2.imshow('7. Forest Map with Tree Distribution', map_img)
+
+print("\n=== Summary ===")
+print(f"Original trees: 20")
+print(f"Detected trees: {len(valid_trees)}")
+print(f"Detection rate: {(len(valid_trees)/20*100):.1f}%")
+
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+print("\n=== Mission Complete ===")
+print("Contours find exact tree shapes")
+print("Morphology cleans images for better detection")
+print("Now your drone can create accurate forest maps!")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson8-practice-title">Practice: Clean Noisy Tree Image</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor8" placeholder="Try using morphological operations to clean tree images..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn8">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn8">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message8"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-map-marked-alt"></i> <span id="lesson8-real-title">Forest Inventory Drone:</span></h3>
+                    <p id="lesson8-real-text">Forestry companies use contour analysis to measure tree diameter. Morphology fills gaps in canopy images. Your drone could inventory entire forests automatically!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson7.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson9.html" class="btn-next">
+                    <span id="next-text">Next: Video & Camera</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .morphology-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .morph-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--beige);
+            border-radius: 10px;
+        }
+        
+        .morph-visual {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .morph-visual.erosion::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+        }
+        
+        .morph-visual.dilation::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border: 2px solid #000;
+            border-radius: 50%;
+            top: 20px;
+            left: 20px;
+        }
+        
+        .morph-visual.opening {
+            background: 
+                radial-gradient(circle at 30% 30%, #000 5px, transparent 6px),
+                radial-gradient(circle at 70% 70%, #000 5px, transparent 6px);
+            background-color: #fff;
+        }
+        
+        .morph-visual.closing::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border: 2px dashed #000;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 8
+        if (!translations.en['lesson8-full-title']) {
+            Object.assign(translations.en, {
+                'lesson8-full-title': 'Lesson 8: Contours & Morphological Operations',
+                'lesson8-concept-title': 'Finding Object Shapes',
+                'lesson8-concept-text': 'Contours are like drawing lines around objects. Morphology cleans up the shapes. Your drone uses this to find exact tree shapes and remove noise.',
+                'erosion-text': 'Shrinks white areas. Removes small noise.',
+                'dilation-text': 'Grows white areas. Connects broken parts.',
+                'opening-text': 'Erosion then dilation. Removes small spots.',
+                'closing-text': 'Dilation then erosion. Fills small holes.',
+                'lesson8-commands-title': 'Contour & Morphology Commands',
+                'findcontours-text': 'Finds all objects in binary image. Returns list of contours.',
+                'contourarea-text': 'Calculates area inside contour. Filters small/large objects.',
+                'erode-text': 'Erosion: Shrinks white objects. Good for noise removal.',
+                'dilate-text': 'Dilation: Expands white objects. Connects nearby objects.',
+                'lesson8-example-title': 'Advanced Tree Detection System',
+                'lesson8-practice-title': 'Practice: Clean Noisy Tree Image',
+                'lesson8-real-title': 'Forest Inventory Drone:',
+                'lesson8-real-text': 'Forestry companies use contour analysis to measure tree diameter. Morphology fills gaps in canopy images. Your drone could inventory entire forests automatically!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson8-full-title': 'Lektion 8: Konturen',
+                'lesson8-concept-title': 'Objektformen finden',
+                'lesson8-concept-text': 'Konturen sind wie Linien um Objekte zeichnen. Morphologie säubert die Formen. Deine Drohne nutzt das, um exakte Baumformen zu finden und Rauschen zu entfernen.',
+                'erosion-text': 'Verkleinert weiße Bereiche. Entfernt kleines Rauschen.',
+                'dilation-text': 'Vergrößert weiße Bereiche. Verbindet zerbrochene Teile.',
+                'opening-text': 'Zuerst Erosion, dann Dilatation. Entfernt kleine Flecken.',
+                'closing-text': 'Zuerst Dilatation, dann Erosion. Füllt kleine Löcher.',
+                'lesson8-commands-title': 'Kontur- & Morphologiecommands',
+                'findcontours-text': 'Findet alle Objekte im Binärbild. Gibt Liste von Konturen zurück.',
+                'contourarea-text': 'Berechnet Fläche innerhalb der Kontur. Filtert kleine/große Objekte.',
+                'erode-text': 'Erosion: Verkleinert weiße Objekte. Gut zur Rauschunterdrückung.',
+                'dilate-text': 'Dilatation: Vergrößert weiße Objekte. Verbindet nahe Objekte.',
+                'lesson8-example-title': 'Fortschrittliches Baum-Erkennungssystem',
+                'lesson8-practice-title': 'Übung: Verrauschtes Baum-Bild säubern',
+                'lesson8-real-title': 'Forstinventar-Drohne:',
+                'lesson8-real-text': 'Forstunternehmen nutzen Konturanalyse, um Baumdurchmesser zu messen. Morphologie füllt Lücken in Kronenbildern. Deine Drohne könnte ganze Wälder automatisch inventarisieren!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson8-full-title': 'Урок 8: Формы',
+                'lesson8-concept-title': 'Поиск форм объектов',
+                'lesson8-concept-text': 'Контуры - это как обвести объекты по линиям. Морфология очищает формы. Твой дрон использует это, чтобы находить точные формы деревьев и убирать шум.',
+                'erosion-text': 'Уменьшает белые области. Удаляет мелкий шум.',
+                'dilation-text': 'Увеличивает белые области. Соединяет разорванные части.',
+                'opening-text': 'Сначала эрозия, потом дилатация. Убирает мелкие пятна.',
+                'closing-text': 'Сначала дилатация, потом эрозия. Заполняет мелкие дыры.',
+                'lesson8-commands-title': 'Команды для контуров и морфологии',
+                'findcontours-text': 'Находит все объекты на бинарном изображении. Возвращает список контуров.',
+                'contourarea-text': 'Считает площадь внутри контура. Фильтрует мелкие/крупные объекты.',
+                'erode-text': 'Эрозия: Уменьшает белые объекты. Хорошо для удаления шума.',
+                'dilate-text': 'Дилатация: Расширяет белые объекты. Соединяет близкие объекты.',
+                'lesson8-example-title': 'Продвинутая система обнаружения деревьев',
+                'lesson8-practice-title': 'Практика: Очистить зашумлённое изображение дерева',
+                'lesson8-real-title': 'Дрон для учёта леса:',
+                'lesson8-real-text': 'Лесные компании используют анализ контуров для измерения диаметра деревьев. Морфология заполняет пробелы на изображениях крон. Твой дрон может автоматически учесть целые леса!'
+            });
+
+        }
+        
+        document.getElementById('check-btn8')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor8').value;
+            const feedback = document.getElementById('feedback-message8');
+            
+            if (code.includes('cv2.morphologyEx') || (code.includes('cv2.erode') && code.includes('cv2.dilate'))) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent! Morphology is key for cleaning drone images!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.findContours')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good contour finding! Now add morphology to clean shapes.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Try using morphological operations to clean images.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn8')?.addEventListener('click', function() {
+            document.getElementById('code-editor8').value = '';
+            document.getElementById('feedback-message8').innerHTML = '';
+            document.getElementById('feedback-message8').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 8 как пройденный
+        markLessonComplete(8);
+    </script>
+</body>
+</html>

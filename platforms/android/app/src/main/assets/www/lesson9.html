@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 9: Video & Web Camera</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson9-full-title">Lesson 9: Video & Web Camera</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-video"></i> <span id="lesson9-concept-title">Live Drone Vision</span></h2>
+                <p id="lesson9-concept-text">Drones don't just take photos - they see live video! OpenCV can process video frames in real-time. This is like giving your drone live eyes to navigate!</p>
+                
+                <div class="video-concepts">
+                    <div class="concept-item">
+                        <i class="fas fa-film"></i>
+                        <h3>Video Files</h3>
+                        <p id="video-files-text">Process recorded drone flights frame by frame</p>
+                    </div>
+                    <div class="concept-item">
+                        <i class="fas fa-camera"></i>
+                        <h3>Web Camera</h3>
+                        <p id="webcam-text">Use laptop/phone camera as drone simulator</p>
+                    </div>
+                    <div class="concept-item">
+                        <i class="fas fa-play-circle"></i>
+                        <h3>Real-time</h3>
+                        <p id="realtime-text">Process 30+ frames per second for live action</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson9-commands-title">Video & Camera Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.VideoCapture(0)</code>
+                        <p id="videocapture0-text">Opens default camera (0 = first camera)</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.VideoCapture('video.mp4')</code>
+                        <p id="videocapturefile-text">Opens video file for processing</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cap.read()</code>
+                        <p id="capread-text">Reads next frame from camera/video</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.VideoWriter()</code>
+                        <p id="videowriter-text">Saves processed video to file</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson9-example-title">Live Drone Camera System</span></h2>
+                <div class="code-block">
+                    <pre><code># Live Drone Camera System
+import cv2
+import numpy as np
+import time
+
+print("=== Live Drone Camera System ===")
+print("Mission: Process live video from drone camera")
+
+def process_drone_frame(frame):
+    """Process single drone frame - find green areas"""
+    # Convert to HSV for color detection
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    
+    # Define range for green color (trees/grass)
+    lower_green = np.array([35, 50, 50])
+    upper_green = np.array([85, 255, 255])
+    
+    # Create mask for green areas
+    green_mask = cv2.inRange(hsv, lower_green, upper_green)
+    
+    # Apply morphological operations to clean mask
+    kernel = np.ones((5,5), np.uint8)
+    green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_CLOSE, kernel)
+    green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_OPEN, kernel)
+    
+    # Find contours of green areas
+    contours, _ = cv2.findContours(green_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Create result frame
+    result = frame.copy()
+    
+    total_green_area = 0
+    tree_count = 0
+    
+    # Process each green area
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 500:  # Filter small areas
+            total_green_area += area
+            
+            # Draw bounding box for large green areas (potential trees)
+            if area > 2000:
+                tree_count += 1
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(result, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                cv2.putText(result, 'Tree', (x, y-10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+    
+    # Calculate statistics
+    frame_area = frame.shape[0] * frame.shape[1]
+    green_percentage = (total_green_area / frame_area) * 100
+    
+    # Add statistics overlay
+    cv2.putText(result, f'Trees: {tree_count}', (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv2.putText(result, f'Green: {green_percentage:.1f}%', (10, 70), 
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+    # Add safety warnings
+    if tree_count > 5:
+        cv2.putText(result, 'WARNING: Many trees!', (10, 110), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(result, 'Fly higher!', (10, 150), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    
+    return result, green_mask, tree_count, green_percentage
+
+def main():
+    print("\n=== Select Input Source ===")
+    print("1. Web Camera (default)")
+    print("2. Video File")
+    print("3. Generate Test Video")
+    
+    choice = input("Enter choice (1-3, default=1): ").strip() or "1"
+    
+    if choice == "2":
+        # Video file input
+        video_path = input("Enter video file path (or press Enter for default): ").strip()
+        if not video_path:
+            video_path = 'drone_flight.mp4'
+            print(f"Using default: {video_path}")
+            print("Note: Create your own drone video or use webcam option")
+        
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"Error: Cannot open video file {video_path}")
+            print("Switching to web camera...")
+            cap = cv2.VideoCapture(0)
+    
+    elif choice == "3":
+        # Generate test video
+        print("\nGenerating test drone flight video...")
+        generate_test_video()
+        cap = cv2.VideoCapture('test_drone_flight.avi')
+    
+    else:
+        # Web camera input
+        print("\nOpening web camera...")
+        print("Point camera at green objects (plants, trees, green paper)")
+        cap = cv2.VideoCapture(0)
+    
+    # Check if camera opened successfully
+    if not cap.isOpened():
+        print("Error: Cannot open camera")
+        return
+    
+    # Get camera/video properties
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    if fps == 0:  # Webcam may return 0
+        fps = 30
+        print(f"Setting FPS to {fps} (default for webcam)")
+    
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    print(f"\n=== Camera Properties ===")
+    print(f"Resolution: {width}x{height}")
+    print(f"FPS: {fps}")
+    
+    # Create window
+    cv2.namedWindow('Live Drone Vision', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('Live Drone Vision', 800, 600)
+    
+    # For statistics
+    frame_count = 0
+    start_time = time.time()
+    max_trees = 0
+    avg_green = 0
+    
+    print("\n=== Starting Live Processing ===")
+    print("Press 'q' to quit")
+    print("Press 's' to save current frame")
+    print("Press 'p' to pause/resume")
+    
+    paused = False
+    
+    while True:
+        if not paused:
+            # Read frame from camera
+            ret, frame = cap.read()
+            
+            if not ret:
+                print("Error: Can't receive frame. Exiting...")
+                break
+            
+            frame_count += 1
+            
+            # Process frame
+            processed_frame, green_mask, tree_count, green_percentage = process_drone_frame(frame)
+            
+            # Update statistics
+            max_trees = max(max_trees, tree_count)
+            avg_green = (avg_green * (frame_count-1) + green_percentage) / frame_count
+            
+            # Display FPS
+            elapsed_time = time.time() - start_time
+            current_fps = frame_count / elapsed_time if elapsed_time > 0 else 0
+            cv2.putText(processed_frame, f'FPS: {current_fps:.1f}', 
+                       (width-150, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+            
+            # Display frame number
+            cv2.putText(processed_frame, f'Frame: {frame_count}', 
+                       (width-150, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+            
+            # Show original and processed side by side
+            display = np.zeros((height, width*2, 3), dtype=np.uint8)
+            display[0:height, 0:width] = frame
+            display[0:height, width:width*2] = processed_frame
+            
+            # Add separator line
+            cv2.line(display, (width, 0), (width, height), (255, 255, 255), 2)
+            
+            # Add labels
+            cv2.putText(display, 'Original', (10, 30), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(display, 'Processed', (width+10, 30), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            
+            # Show display
+            cv2.imshow('Live Drone Vision', display)
+        
+        # Handle keyboard input
+        key = cv2.waitKey(1) & 0xFF
+        
+        if key == ord('q'):
+            print("\nQuitting...")
+            break
+        elif key == ord('s'):
+            # Save current frame
+            filename = f'drone_frame_{frame_count}.jpg'
+            cv2.imwrite(filename, processed_frame)
+            print(f"Frame saved as {filename}")
+        elif key == ord('p'):
+            paused = not paused
+            print(f"Paused: {paused}")
+        elif key == ord('m'):
+            # Show/hide mask
+            cv2.imshow('Green Mask', green_mask)
+    
+    # Calculate final statistics
+    total_time = time.time() - start_time
+    avg_fps = frame_count / total_time if total_time > 0 else 0
+    
+    print("\n=== Processing Complete ===")
+    print(f"Total frames processed: {frame_count}")
+    print(f"Total time: {total_time:.2f} seconds")
+    print(f"Average FPS: {avg_fps:.1f}")
+    print(f"Maximum trees in one frame: {max_trees}")
+    print(f"Average green percentage: {avg_green:.1f}%")
+    
+    # Release everything
+    cap.release()
+    cv2.destroyAllWindows()
+    
+    print("\n=== Mission Complete ===")
+    print("Your drone can now process live video!")
+    print("Real-time vision enables autonomous navigation")
+
+def generate_test_video():
+    """Generate a test drone flight video"""
+    print("Creating simulated drone flight over forest...")
+    
+    width, height = 640, 480
+    fps = 30
+    duration = 10  # seconds
+    total_frames = fps * duration
+    
+    # Create video writer
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter('test_drone_flight.avi', fourcc, fps, (width, height))
+    
+    for frame_num in range(total_frames):
+        # Create frame with moving forest
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+        frame[:, :] = [100, 150, 50]  # Green background
+        
+        # Simulate drone movement (panning right)
+        pan_offset = int(frame_num * 2) % width
+        
+        # Add trees that move with pan
+        for i in range(20):
+            tree_x = (50 + i * 80 + pan_offset) % (width + 100) - 50
+            if 0 <= tree_x < width:
+                tree_y = 200 + int(30 * np.sin(i + frame_num/20))
+                tree_size = 20 + i % 10
+                
+                # Draw tree as triangle
+                pts = np.array([
+                    [tree_x, tree_y - tree_size*2],
+                    [tree_x - tree_size, tree_y],
+                    [tree_x + tree_size, tree_y]
+                ], np.int32)
+                cv2.fillPoly(frame, [pts], (0, 100, 0))
+                
+                # Draw trunk
+                cv2.rectangle(frame, 
+                            (tree_x-5, tree_y), 
+                            (tree_x+5, tree_y+30), 
+                            (50, 30, 10), -1)
+        
+        # Add sky gradient
+        for y in range(150):
+            sky_color = 200 - y//2
+            frame[y, :] = [sky_color, sky_color, 255]
+        
+        # Add frame counter
+        cv2.putText(frame, f'Drone Flight Simulation', (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(frame, f'Frame: {frame_num}/{total_frames}', (10, 60), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        
+        out.write(frame)
+    
+    out.release()
+    print(f"Test video created: test_drone_flight.avi")
+    print(f"Duration: {duration}s, FPS: {fps}, Resolution: {width}x{height}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson9-practice-title">Practice: Live Color Detection</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor9" placeholder="Try modifying the code to detect blue instead of green..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn9">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn9">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message9"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-helicopter"></i> <span id="lesson9-real-title">Live Drone Applications:</span></h3>
+                    <p id="lesson9-real-text">Search & rescue drones scan live video for people. Agricultural drones monitor crop health in real-time. Your drone could avoid obstacles live using this code!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson8.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson10.html" class="btn-next">
+                    <span id="next-text">Next: Object Recognition</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .video-concepts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .concept-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+        }
+        
+        .concept-item i {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 9
+        if (!translations.en['lesson9-full-title']) {
+            Object.assign(translations.en, {
+                'lesson9-full-title': 'Lesson 9: Video & Web Camera',
+                'lesson9-concept-title': 'Live Drone Vision',
+                'lesson9-concept-text': 'Drones don\'t just take photos - they see live video! OpenCV can process video frames in real-time. This is like giving your drone live eyes to navigate!',
+                'video-files-text': 'Process recorded drone flights frame by frame',
+                'webcam-text': 'Use laptop/phone camera as drone simulator',
+                'realtime-text': 'Process 30+ frames per second for live action',
+                'lesson9-commands-title': 'Video & Camera Commands',
+                'videocapture0-text': 'Opens default camera (0 = first camera)',
+                'videocapturefile-text': 'Opens video file for processing',
+                'capread-text': 'Reads next frame from camera/video',
+                'videowriter-text': 'Saves processed video to file',
+                'lesson9-example-title': 'Live Drone Camera System',
+                'lesson9-practice-title': 'Practice: Live Color Detection',
+                'lesson9-real-title': 'Live Drone Applications:',
+                'lesson9-real-text': 'Search & rescue drones scan live video for people. Agricultural drones monitor crop health in real-time. Your drone could avoid obstacles live using this code!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson9-full-title': 'Lektion 9: Video & Webcam',
+                'lesson9-concept-title': 'Live-Drohnen-Sicht',
+                'lesson9-concept-text': 'Drohnen machen nicht nur Fotos - sie sehen Live-Video! OpenCV kann Videobilder in Echtzeit verarbeiten. Das ist, als gäbe man der Drohne lebendige Augen zur Navigation!',
+                'video-files-text': 'Aufgezeichnete Drohnenflüge Bild für Bild verarbeiten',
+                'webcam-text': 'Laptop-/Handykamera als Drohnen-Simulator nutzen',
+                'realtime-text': '30+ Bilder pro Sekunde für Live-Action verarbeiten',
+                'lesson9-commands-title': 'Video- & Kamera-Befehle',
+                'videocapture0-text': 'Öffnet Standardkamera (0 = erste Kamera)',
+                'videocapturefile-text': 'Öffnet Videodatei zur Verarbeitung',
+                'capread-text': 'Liest nächstes Bild von Kamera/Video',
+                'videowriter-text': 'Speichert verarbeitetes Video in Datei',
+                'lesson9-example-title': 'Live-Drohnen-Kamerasystem',
+                'lesson9-practice-title': 'Übung: Live-Farberkennung',
+                'lesson9-real-title': 'Live-Drohnen-Anwendungen:',
+                'lesson9-real-text': 'Such- und Rettungsdrohnen scannen Live-Video nach Personen. Landwirtschaftsdrohnen überwachen Erntegesundheit in Echtzeit. Deine Drohne könnte mit diesem Code live Hindernissen ausweichen!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson9-full-title': 'Урок 9: Видео и веб-камера',
+                'lesson9-concept-title': 'Живое зрение дрона',
+                'lesson9-concept-text': 'Дроны не только делают фото - они видят живое видео! OpenCV может обрабатывать кадры видео в реальном времени. Это как дать дрону живые глаза для навигации!',
+                'video-files-text': 'Обрабатывать записанные полёты дрона кадр за кадром',
+                'webcam-text': 'Использовать камеру ноутбука/телефона как симулятор дрона',
+                'realtime-text': 'Обрабатывать 30+ кадров в секунду для живого действия',
+                'lesson9-commands-title': 'Команды для видео и камеры',
+                'videocapture0-text': 'Открывает камеру по умолчанию (0 = первая камера)',
+                'videocapturefile-text': 'Открывает видеофайл для обработки',
+                'capread-text': 'Читает следующий кадр с камеры/видео',
+                'videowriter-text': 'Сохраняет обработанное видео в файл',
+                'lesson9-example-title': 'Система живой камеры для дрона',
+                'lesson9-practice-title': 'Практика: Живое обнаружение цвета',
+                'lesson9-real-title': 'Приложения для живого дрона:',
+                'lesson9-real-text': 'Поисково-спасательные дроны сканируют живое видео в поисках людей. Сельскохозяйственные дроны следят за здоровьем урожая в реальном времени. Твой дрон мог бы избегать препятствий вживую с этим кодом!'
+            });
+
+        }
+        
+        document.getElementById('check-btn9')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor9').value;
+            const feedback = document.getElementById('feedback-message9');
+            
+            if (code.includes('cv2.VideoCapture')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent! Your drone can now see live video!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cap.read()')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good frame reading! Now add VideoCapture to get live feed.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Start with cv2.VideoCapture(0) for live camera.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn9')?.addEventListener('click', function() {
+            document.getElementById('code-editor9').value = '';
+            document.getElementById('feedback-message9').innerHTML = '';
+            document.getElementById('feedback-message9').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 9 как пройденный
+        markLessonComplete(9);
+    </script>
+</body>
+</html>

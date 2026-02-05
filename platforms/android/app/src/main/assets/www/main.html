@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python & OpenCV for Drones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1 id="main-title">Python & OpenCV for Drones</h1>
+        </header>
+        
+        <main class="lessons-container">
+            <div class="lessons-list">
+                <a href="lesson1.html" class="lesson-card">
+                    <i class="fas fa-book-open"></i>
+                    <h3 id="lesson1-title">Lesson 1: Introduction</h3>
+                    <p id="lesson1-desc">Getting started with OpenCV</p>
+                </a>
+                
+                <a href="lesson2.html" class="lesson-card">
+                    <i class="fas fa-code"></i>
+                    <h3 id="lesson2-title">Lesson 2: Minimal Program</h3>
+                    <p id="lesson2-desc">Basic framework for OpenCV code</p>
+                </a>
+
+                <a href="lesson3.html" class="lesson-card">
+                    <i class="fas fa-image"></i>
+                    <h3 id="lesson3-title">Lesson 3: Loading Images</h3>
+                    <p id="lesson3-desc">Load, save, and get image information</p>
+                </a>
+    
+                <a href="lesson4.html" class="lesson-card">
+                    <i class="fas fa-palette"></i>
+                    <h3 id="lesson4-title">Lesson 4: Color Spaces</h3>
+                    <p id="lesson4-desc">BGR, RGB, HSV, Grayscale conversions</p>
+                </a>
+    
+                <a href="lesson5.html" class="lesson-card">
+                    <i class="fas fa-crop-alt"></i>
+                    <h3 id="lesson5-title">Lesson 5: Image Operations</h3>
+                    <p id="lesson5-desc">Resize, rotate, crop, adjust brightness</p>
+                </a>
+
+                <a href="lesson6.html" class="lesson-card">
+                    <i class="fas fa-filter"></i>
+                    <h3 id="lesson6-title">Lesson 6: Image Filtering</h3>
+                    <p id="lesson6-desc">Blur, sharpen, edge detection, noise removal</p>
+                </a>
+    
+                <a href="lesson7.html" class="lesson-card">
+                    <i class="fas fa-cut"></i>
+                    <h3 id="lesson7-title">Lesson 7: Threshold Processing</h3>
+                    <p id="lesson7-desc">Binary, adaptive, Otsu thresholding</p>
+                </a>
+    
+                <a href="lesson8.html" class="lesson-card">
+                    <i class="fas fa-draw-polygon"></i>
+                    <h3 id="lesson8-title">Lesson 8: Contours & Morphology</h3>
+                    <p id="lesson8-desc">Find shapes, erosion, dilation, opening, closing</p>
+                </a>
+    
+                <a href="lesson9.html" class="lesson-card">
+                    <i class="fas fa-video"></i>
+                    <h3 id="lesson9-title">Lesson 9: Video & Camera</h3>
+                    <p id="lesson9-desc">Live video processing, webcam, video files</p>
+                </a>
+    
+                <a href="lesson10.html" class="lesson-card">
+                    <i class="fas fa-eye"></i>
+                    <h3 id="lesson10-title">Lesson 10: Object Recognition</h3>
+                    <p id="lesson10-desc">Template matching, feature detection</p>
+                </a>
+    
+                <a href="lesson11.html" class="lesson-card">
+                    <i class="fas fa-running"></i>
+                    <h3 id="lesson11-title">Lesson 11: Motion Detection</h3>
+                    <p id="lesson11-desc">Frame difference, background subtraction</p>
+                </a>
+    
+                <a href="lesson12.html" class="lesson-card">
+                    <i class="fas fa-route"></i>
+                    <h3 id="lesson12-title">Lesson 12: Path Planning</h3>
+                    <p id="lesson12-desc">A*, BFS, potential fields for navigation</p>
+                </a>
+    
+                <a href="lesson13.html" class="lesson-card">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3 id="lesson13-title">Lesson 13: Geo-Actions</h3>
+                    <p id="lesson13-desc">Location-based automated actions</p>
+                </a>
+    
+                <a href="lesson14.html" class="lesson-card">
+                    <i class="fas fa-rocket"></i>
+                    <h3 id="lesson14-title">Lesson 14: Save & Apply</h3>
+                    <p id="lesson14-desc">Complete projects and next steps</p>
+                </a>         
+            </div>
+            <!-- Прогресс-бар -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <h3 id="progress-title">Your Progress</h3>
+                    <span id="progress-count">0/14</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="progress-text">Complete all lessons to unlock the celebration!</p>
+            </div>
+            <!-- Специальная карточка -->
+            <div class="lesson-card special-card" id="celebration-card">
+                <i class="fas fa-award"></i>
+                <h3 id="celebration-title">🎉 Celebration! 🎉</h3>
+                <p id="celebration-desc">Complete all lessons to celebration!</p>
+                <div class="locked-badge">
+                    <i class="fas fa-lock"></i>
+                    <span id="complete-all">Complete all lessons</span>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const celebrationCard = document.getElementById('celebration-card');
+            const completedLessons = JSON.parse(localStorage.getItem('opencv-learn-completed') || '[]');
+    
+            // Обновляем прогресс
+            const progressCount = document.getElementById('progress-count');
+            const progressFill = document.querySelector('.progress-fill');
+            const progressText = document.getElementById('progress-text');
+    
+            if (progressCount) {
+                progressCount.textContent = `${completedLessons.length}/14`;
+            }
+    
+            if (progressFill) {
+                const progressPercent = (completedLessons.length / 14) * 100;
+                progressFill.style.width = `${progressPercent}%`;
+            }
+    
+            if (progressText) {
+                if (completedLessons.length === 14) {
+                    progressText.textContent = 'All lessons completed! Click the celebration card!';
+                } else {
+                    progressText.textContent = `Complete ${14 - completedLessons.length} more lesson${completedLessons.length === 13 ? '' : 's'} to unlock the celebration!`;
+                }
+            }
+    
+            // Обработка клика на карточку праздника
+            if (celebrationCard) {
+                celebrationCard.addEventListener('click', function() {
+                    if (completedLessons.length >= 14) {
+                        window.location.href = 'congratulations.html';
+                    } else {
+                        const missing = 14 - completedLessons.length;
+                        alert(`Complete ${missing} more lesson${missing > 1 ? 's' : ''} to unlock the celebration!`);
+                    }
+                });
+            }
+        });
+        // Функция для проверки выполнения всех уроков
+        function checkCompletion() {
+            // Проверяем, выполнены ли все уроки
+            const completedLessons = JSON.parse(localStorage.getItem('opencv-learn-completed') || '[]');
+    
+            if (completedLessons.length >= 14) {
+            window.location.href = 'congratulations.html';
+            } else {
+                alert(`Complete ${14 - completedLessons.length} more lessons to unlock the celebration!`);
+            }
+        }
+    </script>
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

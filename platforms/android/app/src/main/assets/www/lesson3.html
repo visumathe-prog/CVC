@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 3: Loading Images</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson3-full-title">Lesson 3: Loading & Saving Images</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-camera"></i> <span id="lesson3-concept-title">How Drones See Pictures</span></h2>
+                <p id="lesson3-concept-text">When a drone takes a photo, it saves it as a file. OpenCV helps your program open these files and work with them. Think of it like opening a photo album on your computer.</p>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson3-commands-title">Important Commands for Images</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.imread('forest.jpg')</code>
+                        <p id="imread-detail-text">Loads an image from file. Use this to open photos from your drone.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.imwrite('drone_photo.jpg', image)</code>
+                        <p id="imwrite-text">Saves an image to file. Your drone can save pictures it takes.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>type(image)</code>
+                        <p id="type-text">Shows what type of data the image is. Usually it's a numpy array.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>image.shape</code>
+                        <p id="shape-text">Shows image size: (height, width, colors). Like measuring a photo.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson3-example-title">Complete Example: Forest Survey</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone forest survey program
+import cv2
+import numpy as np
+
+print("=== Drone Image Manager ===")
+
+# 1. Load forest image from drone
+# Make sure you have 'forest.jpg' in same folder
+forest_image = cv2.imread('forest.jpg')
+
+# 2. Check if image loaded
+if forest_image is None:
+    print("Error: Forest image not found!")
+    print("Creating a sample image for practice...")
+    # Create a green forest image (height, width, colors)
+    forest_image = np.zeros((400, 600, 3), dtype=np.uint8)
+    forest_image[:, :] = [34, 139, 34]  # Forest green color
+    print("Sample forest created!")
+else:
+    print("Forest image loaded successfully!")
+
+# 3. Show image info
+print(f"Image size: {forest_image.shape}")
+print(f"Height: {forest_image.shape[0]} pixels")
+print(f"Width: {forest_image.shape[1]} pixels")
+print(f"Colors: {forest_image.shape[2]} channels (B,G,R)")
+
+# 4. Show the forest
+cv2.imshow('Drone Forest View', forest_image)
+print("\nPress any key to continue...")
+cv2.waitKey(0)
+
+# 5. Save a copy
+cv2.imwrite('forest_copy.jpg', forest_image)
+print("Image saved as 'forest_copy.jpg'")
+
+# 6. Create and save a smaller version
+small_forest = cv2.resize(forest_image, (300, 200))
+cv2.imwrite('forest_small.jpg', small_forest)
+print("Small version saved as 'forest_small.jpg'")
+
+# 7. Show small version
+cv2.imshow('Small Forest', small_forest)
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+
+cv2.destroyAllWindows()
+print("\n=== Program Complete ===")
+print("Your drone can now load and save images!")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson3-practice-title">Try It Yourself</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor3" placeholder="Type your code here... Try loading an image"></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn3">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn3">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message3"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-tree"></i> <span id="lesson3-real-title">Real Drone Task:</span></h3>
+                    <p id="lesson3-real-text">Your drone flies over a forest and takes pictures every minute. This code helps it save all those pictures with different names. Later, you can check if trees are healthy by looking at the pictures.</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson2.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson4.html" class="btn-next">
+                    <span id="next-text">Next: Color Spaces</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Добавляем в translations
+        if (!translations.en['lesson3-full-title']) {
+            Object.assign(translations.en, {
+                'lesson3-full-title': 'Lesson 3: Loading & Saving Images',
+                'lesson3-concept-title': 'How Drones See Pictures',
+                'lesson3-concept-text': 'When a drone takes a photo, it saves it as a file. OpenCV helps your program open these files and work with them. Think of it like opening a photo album on your computer.',
+                'lesson3-commands-title': 'Important Commands for Images',
+                'imread-detail-text': 'Loads an image from file. Use this to open photos from your drone.',
+                'imwrite-text': 'Saves an image to file. Your drone can save pictures it takes.',
+                'type-text': 'Shows what type of data the image is. Usually it\'s a numpy array.',
+                'shape-text': 'Shows image size: (height, width, colors). Like measuring a photo.',
+                'lesson3-example-title': 'Complete Example: Forest Survey',
+                'lesson3-practice-title': 'Try It Yourself',
+                'lesson3-real-title': 'Real Drone Task:',
+                'lesson3-real-text': 'Your drone flies over a forest and takes pictures every minute. This code helps it save all those pictures with different names. Later, you can check if trees are healthy by looking at the pictures.'
+            });
+            
+            Object.assign(translations.de, {
+                'lesson3-full-title': 'Lektion 3: Bilder laden & speichern',
+                'lesson3-concept-title': 'Wie Drohnen Bilder sehen',
+                'lesson3-concept-text': 'Wenn eine Drohne ein Foto macht, speichert sie es als Datei. OpenCV hilft deinem Programm, diese Dateien zu öffnen und damit zu arbeiten. Stell es dir vor wie das Öffnen eines Fotoalbums auf deinem Computer.',
+                'lesson3-commands-title': 'Wichtige Commands für Bilder',
+                'imread-detail-text': 'Lädt ein Bild aus einer Datei. Verwende dies, um Fotos von deiner Drohne zu öffnen.',
+                'imwrite-text': 'Speichert ein Bild in einer Datei. Deine Drohne kann aufgenommene Bilder speichern.',
+                'type-text': 'Zeigt an, welchen Datentyp das Bild hat. Normalerweise ist es ein numpy array.',
+                'shape-text': 'Zeigt die Bildgröße an: (Höhe, Breite, Farben). Wie das Messen eines Fotos.',
+                'lesson3-example-title': 'Vollständiges Beispiel: Waldaufnahme',
+                'lesson3-practice-title': 'Versuche es selbst',
+                'lesson3-real-title': 'Echte Drohnenaufgabe:',
+                'lesson3-real-text': 'Deine Drohne fliegt über einen Wald und macht jede Minute Bilder. Dieser Code hilft ihr, alle diese Bilder mit verschiedenen Namen zu speichern. Später kannst du prüfen, ob die Bäume gesund sind, indem du dir die Bilder ansiehst.'
+            });
+            
+            Object.assign(translations.ru, {
+                'lesson3-full-title': 'Урок 3: Загрузка и сохранение изображений',
+                'lesson3-concept-title': 'Как дроны видят фотографии',
+                'lesson3-concept-text': 'Когда дрон делает фото, он сохраняет его как файл. OpenCV помогает вашей программе открывать эти файлы и работать с ними. Представьте это как открытие фотоальбома на вашем компьютере.',
+                'lesson3-commands-title': 'Важные команды для изображений',
+                'imread-detail-text': 'Загружает изображение из файла. Используйте это для открытия фотографий с вашего дрона.',
+                'imwrite-text': 'Сохраняет изображение в файл. Ваш дрон может сохранять сделанные им фотографии.',
+                'type-text': 'Показывает, какого типа данные в изображении. Обычно это numpy массив.',
+                'shape-text': 'Показывает размер изображения: (высота, ширина, цвета). Как измерение фотографии.',
+                'lesson3-example-title': 'Полный пример: Съёмка леса',
+                'lesson3-practice-title': 'Попробуй сам',
+                'lesson3-real-title': 'Реальная задача для дрона:',
+                'lesson3-real-text': 'Ваш дрон летает над лесом и делает фотографии каждую минуту. Этот код помогает ему сохранять все эти фотографии с разными именами. Позже вы можете проверить, здоровы ли деревья, посмотрев на фотографии.'
+            });
+        }
+        
+        document.getElementById('check-btn3')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor3').value;
+            const feedback = document.getElementById('feedback-message3');
+            
+            if (code.includes('cv2.imread') && code.includes('cv2.imwrite')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent! Your drone can now save forest pictures!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.imread')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good! Try adding cv2.imwrite to save images too.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Remember to use cv2.imread to load images';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn3')?.addEventListener('click', function() {
+            document.getElementById('code-editor3').value = '';
+            document.getElementById('feedback-message3').innerHTML = '';
+            document.getElementById('feedback-message3').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 3 как пройденный
+        markLessonComplete(3);
+    </script>
+</body>
+</html>
