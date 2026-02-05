@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 14: Save & Apply</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson14-full-title">Lesson 14: Save & Apply Knowledge</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-graduation-cap"></i> <span id="lesson14-concept-title">From Learning to Doing</span></h2>
+                <p id="lesson14-concept-text">You've learned OpenCV concepts - now it's time to apply them! This lesson shows how to save your work, build real projects, and continue learning.</p>
+                
+                <div class="save-steps">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <h3>Save Your Code</h3>
+                        <p id="save-code-text">Organize code files for easy reuse</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <h3>Test on Real Images</h3>
+                        <p id="test-real-text">Use photos from your phone or drone</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <h3>Build Mini-Projects</h3>
+                        <p id="mini-projects-text">Combine lessons into useful applications</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <h3>Share & Improve</h3>
+                        <p id="share-text">Get feedback and enhance your skills</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-folder-open"></i> <span id="project-structure-title">Project Organization</span></h2>
+                <div class="code-block">
+                    <pre><code># Recommended project structure for drone applications
+your_drone_project/
+├── data/                   # Images and videos
+│   ├── input/             # Raw drone footage
+│   ├── processed/         # Processed images
+│   └── output/            # Final results
+├── src/                   # Source code
+│   ├── detection/         # Object detection
+│   ├── navigation/        # Path planning
+│   ├── utils/            # Helper functions
+│   └── main.py           # Main program
+├── models/               # Trained models (if using ML)
+├── config/              # Configuration files
+├── tests/               # Test code
+├── requirements.txt     # Python dependencies
+└── README.md           # Project documentation</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="complete-project-title">Complete Drone Application Template</span></h2>
+                <div class="code-block">
+                    <pre><code># Complete Drone Application Template
+# main.py - Forest Monitoring Drone
+import cv2
+import numpy as np
+import os
+import json
+from datetime import datetime
+
+class ForestMonitor:
+    """Complete forest monitoring application combining all lessons"""
+    
+    def __init__(self, config_file='config/settings.json'):
+        self.load_config(config_file)
+        self.setup_directories()
+        self.initialize_modules()
+        
+        print("="*60)
+        print("FOREST MONITORING DRONE APPLICATION")
+        print("="*60)
+        print(f"Initialized with config: {config_file}")
+        print(f"Data directory: {self.data_dir}")
+        print(f"Output directory: {self.output_dir}")
+    
+    def load_config(self, config_file):
+        """Load configuration from JSON file"""
+        default_config = {
+            "camera_index": 0,
+            "resolution": [640, 480],
+            "forest_green_threshold": 35,
+            "tree_min_area": 500,
+            "save_images": True,
+            "save_logs": True,
+            "output_format": "jpg"
+        }
+        
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as f:
+                self.config = json.load(f)
+            print(f"Loaded config from {config_file}")
+        else:
+            self.config = default_config
+            print(f"Using default config (create {config_file} to customize)")
+        
+        # Set attributes from config
+        for key, value in self.config.items():
+            setattr(self, key, value)
+    
+    def setup_directories(self):
+        """Create necessary directories"""
+        self.data_dir = "data"
+        self.output_dir = "output"
+        self.log_dir = "logs"
+        
+        directories = [
+            os.path.join(self.data_dir, "input"),
+            os.path.join(self.data_dir, "processed"),
+            self.output_dir,
+            self.log_dir
+        ]
+        
+        for directory in directories:
+            os.makedirs(directory, exist_ok=True)
+            print(f"Created directory: {directory}")
+    
+    def initialize_modules(self):
+        """Initialize all OpenCV modules we've learned"""
+        print("\nInitializing modules:")
+        
+        # Camera module (Lesson 9)
+        self.cap = cv2.VideoCapture(self.camera_index)
+        if not self.cap.isOpened():
+            print("  ❌ Camera not available, using simulated feed")
+            self.use_simulation = True
+        else:
+            self.use_simulation = False
+            print(f"  ✅ Camera ready: {self.resolution}")
+        
+        # Color detection (Lesson 4)
+        self.green_lower = np.array([self.forest_green_threshold, 50, 50])
+        self.green_upper = np.array([85, 255, 255])
+        print("  ✅ Color detection ready")
+        
+        # Motion detection (Lesson 11)
+        self.bg_subtractor = cv2.createBackgroundSubtractorMOG2()
+        print("  ✅ Motion detection ready")
+        
+        # Log file
+        if self.save_logs:
+            log_file = os.path.join(self.log_dir, f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+            self.log_file = open(log_file, 'w')
+            print(f"  ✅ Log file: {log_file}")
+        
+        print("  ✅ All modules initialized!")
+    
+    def process_frame(self, frame):
+        """Process single frame with all techniques"""
+        results = {
+            'original': frame.copy(),
+            'processed': None,
+            'trees_detected': 0,
+            'green_percentage': 0,
+            'motion_detected': False,
+            'timestamp': datetime.now()
+        }
+        
+        # 1. Resize if needed (Lesson 5)
+        if frame.shape[:2] != tuple(self.resolution[::-1]):
+            frame = cv2.resize(frame, tuple(self.resolution))
+        
+        # 2. Convert to HSV for color detection (Lesson 4)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        
+        # 3. Detect green areas (forest) (Lesson 4)
+        green_mask = cv2.inRange(hsv, self.green_lower, self.green_upper)
+        
+        # 4. Clean mask with morphology (Lesson 8)
+        kernel = np.ones((5,5), np.uint8)
+        green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_CLOSE, kernel)
+        green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_OPEN, kernel)
+        
+        # 5. Find tree contours (Lesson 8)
+        contours, _ = cv2.findContours(green_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        tree_count = 0
+        processed_frame = frame.copy()
+        
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > self.tree_min_area:
+                tree_count += 1
+                
+                # Draw bounding box (Lesson 8)
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(processed_frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                
+                # Add tree number
+                cv2.putText(processed_frame, f"Tree {tree_count}", 
+                           (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        results['trees_detected'] = tree_count
+        
+        # 6. Calculate green percentage
+        total_pixels = frame.shape[0] * frame.shape[1]
+        green_pixels = np.sum(green_mask > 0)
+        green_percentage = (green_pixels / total_pixels) * 100
+        results['green_percentage'] = green_percentage
+        
+        # 7. Motion detection (Lesson 11)
+        motion_mask = self.bg_subtractor.apply(frame)
+        _, motion_mask = cv2.threshold(motion_mask, 200, 255, cv2.THRESH_BINARY)
+        
+        motion_contours, _ = cv2.findContours(motion_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        motion_detected = False
+        
+        for contour in motion_contours:
+            if cv2.contourArea(contour) > 100:  # Minimum motion area
+                motion_detected = True
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(processed_frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                cv2.putText(processed_frame, "MOTION", (x, y-10),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        
+        results['motion_detected'] = motion_detected
+        results['processed'] = processed_frame
+        
+        # 8. Add overlay information
+        self.add_overlay(processed_frame, tree_count, green_percentage, motion_detected)
+        
+        return results
+    
+    def add_overlay(self, frame, tree_count, green_percent, motion_detected):
+        """Add information overlay to frame"""
+        # Status bar at top
+        cv2.rectangle(frame, (0, 0), (frame.shape[1], 40), (40, 40, 40), -1)
+        
+        # Time and date
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cv2.putText(frame, current_time, (10, 25),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        
+        # Statistics
+        stats_x = frame.shape[1] - 300
+        stats = f"Trees: {tree_count} | Green: {green_percent:.1f}%"
+        cv2.putText(frame, stats, (stats_x, 25),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        
+        # Motion warning
+        if motion_detected:
+            warning = "MOTION DETECTED!"
+            text_size = cv2.getTextSize(warning, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)[0]
+            text_x = (frame.shape[1] - text_size[0]) // 2
+            cv2.putText(frame, warning, (text_x, frame.shape[0] - 30),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+    
+    def save_results(self, results):
+        """Save processing results"""
+        timestamp = results['timestamp'].strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        
+        if self.save_images:
+            # Save original frame
+            original_path = os.path.join(self.data_dir, "input", f"original_{timestamp}.{self.output_format}")
+            cv2.imwrite(original_path, results['original'])
+            
+            # Save processed frame
+            if results['processed'] is not None:
+                processed_path = os.path.join(self.output_dir, f"processed_{timestamp}.{self.output_format}")
+                cv2.imwrite(processed_path, results['processed'])
+        
+        # Log results
+        if hasattr(self, 'log_file'):
+            log_entry = {
+                'timestamp': results['timestamp'].isoformat(),
+                'trees_detected': results['trees_detected'],
+                'green_percentage': results['green_percentage'],
+                'motion_detected': results['motion_detected']
+            }
+            self.log_file.write(json.dumps(log_entry) + '\n')
+            self.log_file.flush()
+    
+    def generate_simulation_frame(self):
+        """Generate simulation frame if no camera available"""
+        width, height = self.resolution
+        
+        # Create forest scene
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+        
+        # Sky (top 40%)
+        frame[0:int(height*0.4), :] = [135, 206, 235]
+        
+        # Forest (bottom 60%)
+        frame[int(height*0.4):, :] = [34, 139, 34]
+        
+        # Add trees
+        for i in range(np.random.randint(5, 15)):
+            x = np.random.randint(50, width-50)
+            y = np.random.randint(int(height*0.4), height-50)
+            size = np.random.randint(20, 50)
+            
+            # Tree crown
+            cv2.circle(frame, (x, y), size, (0, 100, 0), -1)
+            
+            # Tree trunk
+            trunk_height = size * 1.5
+            cv2.rectangle(frame, (x-5, y), (x+5, y+trunk_height), (50, 30, 10), -1)
+        
+        # Occasionally add moving object
+        if hasattr(self, 'simulation_step'):
+            self.simulation_step += 1
+            if self.simulation_step % 100 == 0:
+                # Add animal or person
+                obj_type = np.random.choice(['deer', 'person'])
+                obj_x = np.random.randint(100, width-100)
+                obj_y = height - 100
+                
+                if obj_type == 'deer':
+                    # Brown rectangle for deer body
+                    cv2.rectangle(frame, (obj_x-20, obj_y-10), (obj_x+20, obj_y+10), (139, 69, 19), -1)
+                    # Neck and head
+                    cv2.rectangle(frame, (obj_x+15, obj_y-25), (obj_x+30, obj_y-5), (139, 69, 19), -1)
+                    cv2.circle(frame, (obj_x+35, obj_y-20), 8, (139, 69, 19), -1)
+                else:
+                    # Person
+                    cv2.circle(frame, (obj_x, obj_y-15), 10, (200, 150, 100), -1)
+                    cv2.rectangle(frame, (obj_x-5, obj_y), (obj_x+5, obj_y+30), (100, 100, 200), -1)
+        else:
+            self.simulation_step = 0
+        
+        return frame
+    
+    def run(self, duration_seconds=30):
+        """Main application loop"""
+        print("\n" + "="*60)
+        print("STARTING FOREST MONITORING")
+        print("="*60)
+        
+        print(f"\nDuration: {duration_seconds} seconds")
+        print("Press 'q' to quit early")
+        print("Press 's' to save current frame")
+        print("Press 'p' to pause/resume")
+        
+        start_time = datetime.now()
+        frame_count = 0
+        paused = False
+        
+        print("\nMonitoring in progress...")
+        
+        while True:
+            if not paused:
+                # Get frame
+                if self.use_simulation:
+                    frame = self.generate_simulation_frame()
+                else:
+                    ret, frame = self.cap.read()
+                    if not ret:
+                        print("Error reading frame, using simulation")
+                        frame = self.generate_simulation_frame()
+                
+                # Process frame
+                results = self.process_frame(frame)
+                frame_count += 1
+                
+                # Save results
+                self.save_results(results)
+                
+                # Display
+                if results['processed'] is not None:
+                    cv2.imshow('Forest Monitoring Drone', results['processed'])
+                
+                # Calculate elapsed time
+                elapsed = (datetime.now() - start_time).total_seconds()
+                
+                # Show progress every 5 seconds
+                if int(elapsed) % 5 == 0 and int(elapsed) > 0:
+                    print(f"  {int(elapsed)}s: {results['trees_detected']} trees, {results['green_percentage']:.1f}% green" +
+                          (", MOTION!" if results['motion_detected'] else ""))
+                
+                # Check duration
+                if elapsed >= duration_seconds:
+                    print(f"\nDuration reached: {duration_seconds} seconds")
+                    break
+            
+            # Handle keyboard input
+            key = cv2.waitKey(1) & 0xFF
+            
+            if key == ord('q'):
+                print("\nUser requested quit")
+                break
+            elif key == ord('s'):
+                if 'processed' in locals() and results['processed'] is not None:
+                    manual_save_path = os.path.join(self.output_dir, f"manual_save_{datetime.now().strftime('%H%M%S')}.jpg")
+                    cv2.imwrite(manual_save_path, results['processed'])
+                    print(f"Manually saved: {manual_save_path}")
+            elif key == ord('p'):
+                paused = not paused
+                print(f"Paused: {paused}")
+        
+        # Cleanup
+        self.cleanup()
+        
+        # Generate report
+        self.generate_report(start_time, frame_count)
+    
+    def cleanup(self):
+        """Cleanup resources"""
+        if not self.use_simulation:
+            self.cap.release()
+        
+        if hasattr(self, 'log_file'):
+            self.log_file.close()
+        
+        cv2.destroyAllWindows()
+        
+        print("\nResources cleaned up")
+    
+    def generate_report(self, start_time, frame_count):
+        """Generate final mission report"""
+        print("\n" + "="*60)
+        print("MISSION REPORT")
+        print("="*60)
+        
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        
+        # Read log file to get statistics
+        if hasattr(self, 'log_file'):
+            log_path = self.log_file.name
+            if os.path.exists(log_path):
+                with open(log_path, 'r') as f:
+                    logs = [json.loads(line) for line in f]
+                
+                if logs:
+                    avg_trees = np.mean([log['trees_detected'] for log in logs])
+                    avg_green = np.mean([log['green_percentage'] for log in logs])
+                    motion_count = sum([log['motion_detected'] for log in logs])
+                    
+                    print(f"\nStatistics:")
+                    print(f"  Total frames: {frame_count}")
+                    print(f"  Duration: {duration:.1f} seconds")
+                    print(f"  Average FPS: {frame_count/duration:.1f}")
+                    print(f"  Average trees per frame: {avg_trees:.1f}")
+                    print(f"  Average green coverage: {avg_green:.1f}%")
+                    print(f"  Motion events: {motion_count}")
+        
+        print(f"\nData saved in:")
+        print(f"  Input images: data/input/")
+        print(f"  Processed results: output/")
+        if hasattr(self, 'log_file'):
+            print(f"  Log file: {self.log_file.name}")
+        
+        print("\nNext steps:")
+        print("1. Review the saved images in output/ directory")
+        print("2. Modify config/settings.json for different parameters")
+        print("3. Connect real drone camera by changing camera_index")
+        print("4. Extend with more features from lessons learned")
+        
+        print("\n" + "="*60)
+        print("MISSION COMPLETE")
+        print("="*60)
+
+# Quick start example
+def quick_start():
+    """Quick start function for beginners"""
+    print("\n" + "="*60)
+    print("QUICK START GUIDE")
+    print("="*60)
+    
+    print("\n1. Save this code as 'forest_monitor.py'")
+    print("2. Install requirements:")
+    print("   pip install opencv-python numpy")
+    print("3. Run the program:")
+    print("   python forest_monitor.py")
+    print("4. For simulation (no camera):")
+    print("   python forest_monitor.py --simulate")
+    
+    print("\nBasic usage:")
+    print("""
+    from main import ForestMonitor
+    
+    # Create monitor with default settings
+    monitor = ForestMonitor()
+    
+    # Run for 60 seconds
+    monitor.run(duration_seconds=60)
+    """)
+    
+    print("\nCustom configuration:")
+    print("""
+    # Create config/settings.json:
+    {
+        "camera_index": 0,
+        "resolution": [1280, 720],
+        "forest_green_threshold": 40,
+        "tree_min_area": 1000,
+        "save_images": true,
+        "save_logs": true
+    }
+    """)
+
+# Main execution
+if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Forest Monitoring Drone')
+    parser.add_argument('--simulate', action='store_true', help='Use simulation instead of camera')
+    parser.add_argument('--duration', type=int, default=30, help='Duration in seconds')
+    parser.add_argument('--config', type=str, default='config/settings.json', help='Config file path')
+    
+    args = parser.parse_args()
+    
+    # Show quick start if no arguments
+    if len(sys.argv) == 1:
+        quick_start()
+        print("\nRun with --help to see all options")
+    else:
+        # Create and run monitor
+        monitor = ForestMonitor(args.config)
+        
+        if args.simulate:
+            monitor.use_simulation = True
+            print("\nRunning in simulation mode")
+        
+        monitor.run(duration_seconds=args.duration)</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-rocket"></i> <span id="project-ideas-title">Project Ideas to Build</span></h2>
+                <div class="project-ideas">
+                    <div class="idea-card">
+                        <h3><i class="fas fa-home"></i> Home Security Drone</h3>
+                        <p id="security-idea">Monitor your property. Detect intruders. Send alerts.</p>
+                        <div class="tech-used">
+                            <span>Motion Detection</span>
+                            <span>Object Recognition</span>
+                            <span>Video Processing</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-card">
+                        <h3><i class="fas fa-tree"></i> Garden Health Monitor</h3>
+                        <p id="garden-idea">Check plant health. Detect diseases. Water when dry.</p>
+                        <div class="tech-used">
+                            <span>Color Analysis</span>
+                            <span>Contour Detection</span>
+                            <span>Geo-Actions</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-card">
+                        <h3><i class="fas fa-box"></i> Package Delivery Simulator</h3>
+                        <p id="delivery-idea">Deliver virtual packages. Avoid obstacles. Land precisely.</p>
+                        <div class="tech-used">
+                            <span>Path Planning</span>
+                            <span>Object Recognition</span>
+                            <span>Precision Landing</span>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-card">
+                        <h3><i class="fas fa-camera"></i> Automated Photographer</h3>
+                        <p id="photo-idea">Follow subjects. Frame shots. Take photos automatically.</p>
+                        <div class="tech-used">
+                            <span>Face Detection</span>
+                            <span>Motion Tracking</span>
+                            <span>Auto-framing</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="final-checklist">
+                    <h2><i class="fas fa-check-circle"></i> <span id="checklist-title">Before Your First Real Flight</span></h2>
+                    <ul>
+                        <li id="check1">✓ Test all code in simulation first</li>
+                        <li id="check2">✓ Check local drone regulations</li>
+                        <li id="check3">✓ Start in open area away from people</li>
+                        <li id="check4">✓ Keep drone in visual line of sight</li>
+                        <li id="check5">✓ Have emergency stop procedure ready</li>
+                        <li id="check6">✓ Backup your code before modifications</li>
+                        <li id="check7">✓ Document your projects for future reference</li>
+                    </ul>
+                </div>
+                
+                <div class="next-lesson">
+                    <a href="lesson13.html" class="btn-prev">
+                        <i class="fas fa-arrow-left"></i>
+                        <span id="prev-text">Previous Lesson</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>          
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .save-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .step-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 30px;
+            height: 30px;
+            background: var(--primary-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .project-ideas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .idea-card {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--beige), #e8f5e9);
+            border-radius: 10px;
+            border: 1px solid var(--light-green);
+        }
+        
+        .idea-card h3 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tech-used {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .tech-used span {
+            background: var(--primary-green);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .resources-list {
+            margin: 20px 0;
+        }
+        
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: var(--beige);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .resource-item i {
+            font-size: 2rem;
+            color: var(--primary-green);
+        }
+        
+        .final-checklist {
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e9, var(--beige));
+            border-radius: 10px;
+            border-left: 5px solid var(--primary-green);
+        }
+        
+        .final-checklist ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .final-checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .final-checklist li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 14
+        if (!translations.en['lesson14-full-title']) {
+            Object.assign(translations.en, {
+                'lesson14-full-title': 'Lesson 14: Save & Apply Knowledge',
+                'lesson14-concept-title': 'From Learning to Doing',
+                'lesson14-concept-text': 'You\'ve learned OpenCV concepts - now it\'s time to apply them! This lesson shows how to save your work, build real projects, and continue learning.',
+                'save-code-text': 'Organize code files for easy reuse',
+                'test-real-text': 'Use photos from your phone or drone',
+                'mini-projects-text': 'Combine lessons into useful applications',
+                'share-text': 'Get feedback and enhance your skills',
+                'project-structure-title': 'Project Organization',
+                'complete-project-title': 'Complete Drone Application Template',
+                'project-ideas-title': 'Project Ideas to Build',
+                'security-idea': 'Monitor your property. Detect intruders. Send alerts.',
+                'garden-idea': 'Check plant health. Detect diseases. Water when dry.',
+                'delivery-idea': 'Deliver virtual packages. Avoid obstacles. Land precisely.',
+                'photo-idea': 'Follow subjects. Frame shots. Take photos automatically.',
+                'resources-title': 'Further Learning Resources',
+                'youtube-res': 'Sentdex, freeCodeCamp, ProgrammingKnowledge - Search "OpenCV Python tutorials"',
+                'docs-res': 'docs.opencv.org - Complete reference for all functions',
+                'courses-res': 'Coursera, Udemy - "OpenCV Python for Beginners"',
+                'github-res': 'Search "opencv drone projects" - Learn from real code',
+                'checklist-title': 'Before Your First Real Flight',
+                'check1': '✓ Test all code in simulation first',
+                'check2': '✓ Check local drone regulations',
+                'check3': '✓ Start in open area away from people',
+                'check4': '✓ Keep drone in visual line of sight',
+                'check5': '✓ Have emergency stop procedure ready',
+                'check6': '✓ Backup your code before modifications',
+                'check7': '✓ Document your projects for future reference',
+                'congrats-text': 'Get Your Certificate!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson14-full-title': 'Lektion 14: Wissen speichern & anwenden',
+                'lesson14-concept-title': 'Vom Lernen zum Tun',
+                'lesson14-concept-text': 'Du hast OpenCV-Konzepte gelernt - jetzt ist es Zeit, sie anzuwenden! Diese Lektion zeigt, wie du deine Arbeit speicherst, echte Projekte baust und weiterlernst.',
+                'save-code-text': 'Code-Dateien für leichte Wiederverwendung organisieren',
+                'test-real-text': 'Fotos von deinem Handy oder Drohne verwenden',
+                'mini-projects-text': 'Lektionen zu nützlichen Anwendungen kombinieren',
+                'share-text': 'Feedback erhalten und deine Fähigkeiten verbessern',
+                'project-structure-title': 'Projektorganisation',
+                'complete-project-title': 'Vollständige Drohnen-Anwendungsvorlage',
+                'project-ideas-title': 'Projektideen zum Bauen',
+                'security-idea': 'Dein Eigentum überwachen. Eindringlinge erkennen. Warnungen senden.',
+                'garden-idea': 'Pflanzengesundheit prüfen. Krankheiten erkennen. Gießen, wenn trocken.',
+                'delivery-idea': 'Virtuelle Pakete liefern. Hindernisse meiden. Präzise landen.',
+                'photo-idea': 'Objekten folgen. Aufnahmen einrahmen. Fotos automatisch machen.',
+                'resources-title': 'Weiterführende Lernressourcen',
+                'youtube-res': 'Sentdex, freeCodeCamp, ProgrammingKnowledge - Suche "OpenCV Python tutorials"',
+                'docs-res': 'docs.opencv.org - Vollständige Referenz aller Funktionen',
+                'courses-res': 'Coursera, Udemy - "OpenCV Python für Anfänger"',
+                'github-res': 'Suche "opencv drone projects" - Lerne von echtem Code',
+                'checklist-title': 'Vor deinem ersten echten Flug',
+                'check1': '✓ Teste zuerst allen Code in Simulation',
+                'check2': '✓ Prüfe lokale Drohnenvorschriften',
+                'check3': '✓ Beginne in offenem Gebiet weg von Menschen',
+                'check4': '✓ Halte Drohne in Sichtlinie',
+                'check5': '✓ Halte Notstopp-Prozedur bereit',
+                'check6': '✓ Mache Backups deines Codes vor Änderungen',
+                'check7': '✓ Dokumentiere deine Projekte für die Zukunft',
+                'congrats-text': 'Hole dir dein Zertifikat!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson14-full-title': 'Урок 14: Сохранить и применить знания',
+                'lesson14-concept-title': 'От обучения к действию',
+                'lesson14-concept-text': 'Ты изучил концепции OpenCV - теперь пора их применять! Этот урок показывает, как сохранять свою работу, создавать реальные проекты и продолжать учиться.',
+                'save-code-text': 'Организовать файлы кода для лёгкого повторного использования',
+                'test-real-text': 'Использовать фото с телефона или дрона',
+                'mini-projects-text': 'Объединять уроки в полезные приложения',
+                'share-text': 'Получать обратную связь и улучшать свои навыки',
+                'project-structure-title': 'Организация проекта',
+                'complete-project-title': 'Полный шаблон приложения для дрона',
+                'project-ideas-title': 'Идеи проектов для создания',
+                'security-idea': 'Наблюдать за своей собственностью. Обнаруживать нарушителей. Отправлять оповещения.',
+                'garden-idea': 'Проверять здоровье растений. Обнаруживать болезни. Поливать, когда сухо.',
+                'delivery-idea': 'Доставлять виртуальные посылки. Избегать препятствий. Приземляться точно.',
+                'photo-idea': 'Следовать за объектами. Кадрировать снимки. Делать фото автоматически.',
+                'resources-title': 'Ресурсы для дальнейшего обучения',
+                'youtube-res': 'Sentdex, freeCodeCamp, ProgrammingKnowledge - Ищи "OpenCV Python tutorials"',
+                'docs-res': 'docs.opencv.org - Полный справочник всех функций',
+                'courses-res': 'Coursera, Udemy - "OpenCV Python для начинающих"',
+                'github-res': 'Ищи "opencv drone projects" - Учись на реальном коде',
+                'checklist-title': 'Перед первым настоящим полётом',
+                'check1': '✓ Сначала протестируй весь код в симуляции',
+                'check2': '✓ Проверь местные правила для дронов',
+                'check3': '✓ Начни на открытой местности вдали от людей',
+                'check4': '✓ Держи дрон в прямой видимости',
+                'check5': '✓ Будь готов к процедуре экстренной остановки',
+                'check6': '✓ Сохраняй резервную копию кода перед изменениями',
+                'check7': '✓ Документируй свои проекты для будущего',
+                'congrats-text': 'Получи свой сертификат!'
+            });
+        }
+    </script>
+    <script>
+        // Отмечаем урок 14 как пройденный
+        markLessonComplete(14);
+    </script>
+</body>
+</html>

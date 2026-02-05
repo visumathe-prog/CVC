@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 2: Minimal Program</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson2-full-title">Lesson 2: Minimal Program Framework</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-cube"></i> <span id="framework-title">What is a Framework?</span></h2>
+                <p id="framework-text">A framework is like a house where you put furniture. This framework is a simple Python program where you can put OpenCV code to see how it works.</p>
+                
+                <h2><i class="fas fa-list"></i> <span id="commands-title">Important Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>import cv2</code>
+                        <p id="import-text">This brings OpenCV tools into your program. Like opening a toolbox.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.imread('image.jpg')</code>
+                        <p id="imread-text">Reads an image from a file. Your drone uses this to see pictures it takes.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.imshow('Window', image)</code>
+                        <p id="imshow-text">Shows the image in a window. Like displaying a photo on screen.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.waitKey(0)</code>
+                        <p id="waitkey-text">Waits for you to press a key. Without this, the window closes too fast!</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="full-code-title">Complete Framework Code</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone camera starter code
+import cv2
+
+# 1. Read image from drone camera
+# Replace 'drone_photo.jpg' with your image
+image = cv2.imread('drone_photo.jpg')
+
+# 2. Check if image loaded correctly
+if image is None:
+    print("Error: Could not read image")
+    print("Make sure 'drone_photo.jpg' exists!")
+else:
+    # 3. Show the image
+    cv2.imshow('Drone View', image)
+    
+    # 4. Wait for key press
+    print("Press any key in the window to close...")
+    cv2.waitKey(0)
+    
+    # 5. Close all windows
+    cv2.destroyAllWindows()
+
+print("Program finished!")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="practice-title">Try Writing It Yourself</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor" placeholder="Type the code here... Start with: import cv2"></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+
+                        <button class="btn-clear" id="clear-btn">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-helicopter"></i> <span id="real-life-title">Real Life Example:</span></h3>
+                    <p id="real-life-text">Imagine your drone takes a picture of a forest. This framework shows that picture on your screen. Later, we will teach the drone to find trees in that picture!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson1.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson3.html" class="btn-next">
+                    <span id="next-text">Next: Loading Images</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('check-btn').addEventListener('click', function() {
+            const code = document.getElementById('code-editor').value;
+            const feedback = document.getElementById('feedback-message');
+            
+            if (code.includes('import cv2') && code.includes('cv2.imread')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Great job! Your drone can now load images!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('import cv2')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good start! Try adding cv2.imread to load an image.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Don\'t forget to start with "import cv2"';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            document.getElementById('code-editor').value = '';
+            document.getElementById('feedback-message').innerHTML = '';
+            document.getElementById('feedback-message').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 2 как пройденный
+        markLessonComplete(2);
+    </script>
+</body>
+</html>

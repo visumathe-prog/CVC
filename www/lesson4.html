@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 4: Color Spaces</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson4-full-title">Lesson 4: Color Spaces</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-palette"></i> <span id="lesson4-concept-title">How Computers See Colors</span></h2>
+                <p id="lesson4-concept-text">Humans see colors like red, green, blue. Computers see colors as numbers. Different color spaces help computers understand colors better for different tasks.</p>
+                
+                <div class="color-spaces">
+                    <div class="color-space-item">
+                        <div class="color-box bgr"></div>
+                        <h3>BGR (Blue, Green, Red)</h3>
+                        <p id="bgr-text">Default in OpenCV. Computers store colors in this order.</p>
+                    </div>
+                    <div class="color-space-item">
+                        <div class="color-box rgb"></div>
+                        <h3>RGB (Red, Green, Blue)</h3>
+                        <p id="rgb-text">Normal human vision order. Used in displays.</p>
+                    </div>
+                    <div class="color-space-item">
+                        <div class="color-box grayscale"></div>
+                        <h3>Grayscale</h3>
+                        <p id="grayscale-text">Black and white. Good for finding shapes.</p>
+                    </div>
+                    <div class="color-space-item">
+                        <div class="color-box hsv"></div>
+                        <h3>HSV (Hue, Saturation, Value)</h3>
+                        <p id="hsv-text">Best for finding colors. Your drone uses this to find green trees!</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson4-commands-title">Color Conversion Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)</code>
+                        <p id="cvtcolor-text">Changes color space. BGR to Grayscale for shape detection.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.COLOR_BGR2HSV</code>
+                        <p id="bgr2hsv-text">Converts to HSV. Perfect for finding specific colors like green leaves.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.COLOR_BGR2RGB</code>
+                        <p id="bgr2rgb-text">Converts to normal RGB for displaying correctly.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.split(image)</code>
+                        <p id="split-text">Separates color channels. Shows blue, green, red separately.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson4-example-title">Drone Color Detection Program</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone color analyzer - Find green trees!
+import cv2
+import numpy as np
+
+print("=== Drone Color Analyzer ===")
+print("Mission: Find green trees in forest")
+
+# 1. Create or load forest image
+# In real drone, use: forest = cv2.imread('forest.jpg')
+forest = np.zeros((400, 600, 3), dtype=np.uint8)
+
+# Paint different areas
+forest[100:300, 100:300] = [34, 139, 34]    # Green trees (BGR)
+forest[50:150, 400:550] = [30, 144, 255]    # Orange sand
+forest[300:350, 200:500] = [135, 206, 235]  # Blue river
+
+print("Forest scene created with:")
+print("- Green trees area")
+print("- Orange sand area") 
+print("- Blue river area")
+
+# 2. Show original BGR image
+cv2.imshow('1. Original Forest (BGR)', forest)
+
+# 3. Convert to Grayscale (for shapes)
+gray_forest = cv2.cvtColor(forest, cv2.COLOR_BGR2GRAY)
+cv2.imshow('2. Grayscale (Shapes)', gray_forest)
+
+# 4. Convert to HSV (for color detection)
+hsv_forest = cv2.cvtColor(forest, cv2.COLOR_BGR2HSV)
+cv2.imshow('3. HSV Color Space', hsv_forest)
+
+# 5. Find GREEN trees in HSV
+# HSV ranges for green: [Hue, Saturation, Value]
+lower_green = np.array([35, 50, 50])   # Dark green
+upper_green = np.array([85, 255, 255]) # Light green
+
+# Create mask (white where green, black elsewhere)
+green_mask = cv2.inRange(hsv_forest, lower_green, upper_green)
+cv2.imshow('4. Green Tree Mask', green_mask)
+
+# 6. Apply mask to original image
+# Only show green areas, make others black
+green_trees = cv2.bitwise_and(forest, forest, mask=green_mask)
+cv2.imshow('5. Detected Green Trees', green_trees)
+
+# 7. Count green pixels
+green_pixels = np.sum(green_mask > 0)
+total_pixels = forest.shape[0] * forest.shape[1]
+green_percent = (green_pixels / total_pixels) * 100
+
+print(f"\n=== Analysis Results ===")
+print(f"Total pixels: {total_pixels}")
+print(f"Green tree pixels: {green_pixels}")
+print(f"Forest green coverage: {green_percent:.1f}%")
+
+if green_percent > 30:
+    print("Status: Healthy forest detected!")
+else:
+    print("Status: Low forest coverage")
+
+# 8. Split into B, G, R channels
+blue_channel, green_channel, red_channel = cv2.split(forest)
+
+cv2.imshow('6. Blue Channel', blue_channel)
+cv2.imshow('7. Green Channel', green_channel) 
+cv2.imshow('8. Red Channel', red_channel)
+
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+print("\n=== Mission Complete ===")
+print("Your drone can now find green trees using color spaces!")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson4-practice-title">Practice: Change Color Detection</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor4" placeholder="Try changing the color range to detect blue water instead of green trees..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn4">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn4">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message4"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-water"></i> <span id="lesson4-real-title">Drone Water Detection:</span></h3>
+                    <p id="lesson4-real-text">Search and rescue drones use HSV color space to find blue water in oceans. Farmers use it to find dry (brown) areas in fields. Your drone could monitor forest health by tracking green percentage over time.</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson3.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson5.html" class="btn-next">
+                    <span id="next-text">Next: Image Operations</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .color-spaces {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .color-space-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--beige);
+            border-radius: 10px;
+        }
+        
+        .color-box {
+            width: 100px;
+            height: 50px;
+            margin: 0 auto 10px;
+            border-radius: 5px;
+            border: 2px solid var(--primary-green);
+        }
+        
+        .color-box.bgr { background: linear-gradient(90deg, blue 33%, green 33%, green 66%, red 66%); }
+        .color-box.rgb { background: linear-gradient(90deg, red 33%, green 33%, green 66%, blue 66%); }
+        .color-box.grayscale { background: linear-gradient(90deg, #000, #666, #fff); }
+        .color-box.hsv { background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); }
+    </style>
+    <script>
+        // Добавляем переводы для урока 4
+        if (!translations.en['lesson4-full-title']) {
+            Object.assign(translations.en, {
+                'lesson4-full-title': 'Lesson 4: Color Spaces',
+                'lesson4-concept-title': 'How Computers See Colors',
+                'lesson4-concept-text': 'Humans see colors like red, green, blue. Computers see colors as numbers. Different color spaces help computers understand colors better for different tasks.',
+                'bgr-text': 'Default in OpenCV. Computers store colors in this order.',
+                'rgb-text': 'Normal human vision order. Used in displays.',
+                'grayscale-text': 'Black and white. Good for finding shapes.',
+                'hsv-text': 'Best for finding colors. Your drone uses this to find green trees!',
+                'lesson4-commands-title': 'Color Conversion Commands',
+                'cvtcolor-text': 'Changes color space. BGR to Grayscale for shape detection.',
+                'bgr2hsv-text': 'Converts to HSV. Perfect for finding specific colors like green leaves.',
+                'bgr2rgb-text': 'Converts to normal RGB for displaying correctly.',
+                'split-text': 'Separates color channels. Shows blue, green, red separately.',
+                'lesson4-example-title': 'Drone Color Detection Program',
+                'lesson4-practice-title': 'Practice: Change Color Detection',
+                'lesson4-real-title': 'Drone Water Detection:',
+                'lesson4-real-text': 'Search and rescue drones use HSV color space to find blue water in oceans. Farmers use it to find dry (brown) areas in fields. Your drone could monitor forest health by tracking green percentage over time.'
+            });
+            
+            Object.assign(translations.de, {
+                'lesson4-full-title': 'Lektion 4: Farbmodelle',
+                'lesson4-concept-title': 'Wie Computer Farben sehen',
+                'lesson4-concept-text': 'Menschen sehen Farben wie Rot, Grün, Blau. Computer sehen Farben als Zahlen. Verschiedene Farbmodelle helfen Computern, Farben für verschiedene Aufgaben besser zu verstehen.',
+                'bgr-text': 'Standard in OpenCV. Computer speichern Farben in dieser Reihenfolge.',
+                'rgb-text': 'Normale menschliche Sehreihenfolge. Wird in Displays verwendet.',
+                'grayscale-text': 'Schwarzweiß. Gut zum Finden von Formen.',
+                'hsv-text': 'Am besten zum Finden von Farben. Deine Drohne verwendet dies, um grüne Bäume zu finden!',
+                'lesson4-commands-title': 'Farbumwandlungs Commands',
+                'cvtcolor-text': 'Ändert das Farbmodell. BGR zu Graustufen für Formenerkennung.',
+                'bgr2hsv-text': 'Konvertiert zu HSV. Perfekt zum Finden spezifischer Farben wie grüner Blätter.',
+                'bgr2rgb-text': 'Konvertiert zu normalem RGB für korrekte Anzeige.',
+                'split-text': 'Trennt Farbkanäle. Zeigt Blau, Grün, Rot separat.',
+                'lesson4-example-title': 'Drohnen-Farberkennungsprogramm',
+                'lesson4-practice-title': 'Übung: Ändere die Farberkennung',
+                'lesson4-real-title': 'Drohnen-Wassererkennung:',
+                'lesson4-real-text': 'Such- und Rettungsdrohnen verwenden HSV-Farbmodell, um blaues Wasser in Ozeanen zu finden. Landwirte verwenden es, um trockene (braune) Bereiche in Feldern zu finden. Deine Drohne könnte die Waldgesundheit überwachen, indem sie den Grünanteil über die Zeit verfolgt.'
+            });
+            
+            Object.assign(translations.ru, {
+                'lesson4-full-title': 'Урок 4: Цветовые пространства',
+                'lesson4-concept-title': 'Как компьютеры видят цвета',
+                'lesson4-concept-text': 'Люди видят цвета как красный, зелёный, синий. Компьютеры видят цвета как числа. Разные цветовые пространства помогают компьютерам лучше понимать цвета для разных задач.',
+                'bgr-text': 'По умолчанию в OpenCV. Компьютеры хранят цвета в этом порядке.',
+                'rgb-text': 'Нормальный порядок человеческого зрения. Используется в дисплеях.',
+                'grayscale-text': 'Чёрно-белое. Хорошо для поиска форм.',
+                'hsv-text': 'Лучше всего для поиска цветов. Ваш дрон использует это для поиска зелёных деревьев!',
+                'lesson4-commands-title': 'Команды преобразования цветов',
+                'cvtcolor-text': 'Изменяет цветовое пространство. BGR в Grayscale для обнаружения форм.',
+                'bgr2hsv-text': 'Конвертирует в HSV. Идеально для поиска конкретных цветов, таких как зелёные листья.',
+                'bgr2rgb-text': 'Конвертирует в нормальный RGB для правильного отображения.',
+                'split-text': 'Разделяет цветовые каналы. Показывает синий, зелёный, красный отдельно.',
+                'lesson4-example-title': 'Программа обнаружения цвета дрона',
+                'lesson4-practice-title': 'Практика: Измени обнаружение цвета',
+                'lesson4-real-title': 'Обнаружение воды дроном:',
+                'lesson4-real-text': 'Поисково-спасательные дроны используют цветовое пространство HSV для поиска синей воды в океанах. Фермеры используют его для поиска сухих (коричневых) участков на полях. Ваш дрон может отслеживать здоровье леса, отслеживая процент зелёного цвета с течением времени.'
+            });
+        }
+        
+        document.getElementById('check-btn4')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor4').value;
+            const feedback = document.getElementById('feedback-message4');
+            
+            if (code.includes('cv2.cvtColor') && code.includes('COLOR_BGR2HSV')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Perfect! You understand color spaces for drone vision!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.cvtColor')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good start! Try using COLOR_BGR2HSV for color detection.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Remember to use cv2.cvtColor for color conversion';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn4')?.addEventListener('click', function() {
+            document.getElementById('code-editor4').value = '';
+            document.getElementById('feedback-message4').innerHTML = '';
+            document.getElementById('feedback-message4').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 4 как пройденный
+        markLessonComplete(4);
+    </script>
+</body>
+</html>

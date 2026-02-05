@@ -1,0 +1,13 @@
+services:
+  cordova:
+    build: .
+    volumes:
+      - .:/app
+      - android-sdk-cache:/root/.android
+      - gradle-cache:/root/.gradle
+    working_dir: /app
+    command: tail -f /dev/null
+
+volumes:
+  android-sdk-cache:
+  gradle-cache:

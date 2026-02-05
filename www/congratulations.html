@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congratulations!</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Конфетти стили */
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        .celebration-container {
+            text-align: center;
+            padding: 40px;
+            background: transparent;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(46, 139, 87, 0.3);
+            position: relative;
+            z-index: 1001;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .trophy {
+            font-size: 8rem;
+            color: gold;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .congrats-message {
+            background: linear-gradient(135deg, var(--beige), #e8f5e9);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid var(--primary-green);
+        }
+        
+        .achievement-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-item {
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-item i {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+        
+        .fireworks {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 998;
+        }
+        
+        @keyframes fireworks {
+            0% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .next-steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .step-card {
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .step-card i {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+        
+        .final-actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .btn-main {
+            background: linear-gradient(135deg, var(--primary-green), #4CAF50);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(46, 139, 87, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--beige);
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+        
+        .celebration-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #fff8e1, #fff);
+            border: 2px solid gold;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Конфетти контейнер -->
+        <div id="confetti-container" class="confetti-container"></div>
+        
+        <!-- Фейерверки контейнер -->
+        <div id="fireworks-container"></div>
+        
+        <div class="celebration-container">
+            <div class="trophy">
+                <i class="fas fa-trophy"></i>
+            </div>
+            
+            <h1 id="congrats-title">🎉 Congratulations! 🎉</h1>
+            
+            <div class="congrats-message">
+                <h2 id="achievement-title">Course Completed Successfully!</h2>
+                <p class="celebration-text" id="celebration-text">
+                    You've successfully mastered all 14 lessons of OpenCV programming for drones! 
+                    From basic image processing to advanced autonomous navigation - you've done it all!
+                </p>
+                
+                <div class="highlight-box">
+                    <h3 id="skills-mastered">Skills You've Mastered:</h3>
+                    <ul style="text-align: left; display: inline-block; margin: 15px 0;">
+                        <li>Image loading and processing</li>
+                        <li>Color space conversions</li>
+                        <li>Object detection and recognition</li>
+                        <li>Motion detection and tracking</li>
+                        <li>Path planning algorithms</li>
+                        <li>Autonomous drone programming</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="achievement-stats">
+                <div class="stat-item">
+                    <i class="fas fa-book-open"></i>
+                    <h3 id="lessons-completed">14</h3>
+                    <p id="lessons-label">Lessons Completed</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-code"></i>
+                    <h3 id="code-examples">50+</h3>
+                    <p id="code-label">Code Examples Mastered</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-robot"></i>
+                    <h3 id="projects-ready">6</h3>
+                    <p id="projects-label">Projects Ready to Build</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <h3 id="skills-learned">15</h3>
+                    <p id="skills-label">OpenCV Skills Learned</p>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3 id="next-steps-title">Continue Your Journey!</h3>
+                <p class="celebration-text" id="continue-text">
+                    Your learning journey doesn't end here. Here are some ways to continue:
+                </p>
+                
+                <div class="next-steps-grid">
+                    <div class="step-card">
+                        <i class="fas fa-laptop-code"></i>
+                        <h4 id="step1-title">Build Real Projects</h4>
+                        <p id="step1-text">Use the project ideas from Lesson 14</p>
+                    </div>
+                    <div class="step-card">
+                        <i class="fas fa-users"></i>
+                        <h4 id="step2-title">Join Communities</h4>
+                        <p id="step2-text">Connect with other drone enthusiasts</p>
+                    </div>
+                    <div class="step-card">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h4 id="step3-title">Explore Advanced Topics</h4>
+                        <p id="step3-text">Learn machine learning for drones</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="celebration-text" id="final-message">
+                <p>Remember: Every expert was once a beginner. Keep coding, keep learning, and most importantly - have fun building amazing drone projects!</p>
+                <p style="margin-top: 15px; font-style: italic;">"The sky is not the limit, it's just the beginning!"</p>
+            </div>
+            
+            <div class="final-actions">
+                <a href="main.html" class="btn-main">
+                    <i class="fas fa-home"></i>
+                    <span id="back-to-lessons">Back to Lessons</span>
+                </a>
+                <a href="lesson14.html" class="btn-secondary">
+                    <i class="fas fa-rocket"></i>
+                    <span id="review-projects">Review Project Ideas</span>
+                </a>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, пройдены ли все уроки
+            const completedLessons = JSON.parse(localStorage.getItem('opencv-learn-completed') || '[]');
+        
+            if (completedLessons.length < 14) {
+                // Если не все уроки пройдены, показываем сообщение и перенаправляем
+                const missing = 14 - completedLessons.length;
+                alert(`You need to complete ${missing} more lesson${missing > 1 ? 's' : ''} to unlock the celebration!`);
+                window.location.href = 'main.html';
+                return; // Прекращаем выполнение дальше
+            }
+        
+            // Если все уроки пройдены, продолжаем с праздником!
+            console.log('🎉 All lessons completed! Starting celebration...');        
+        });
+                
+        // Создаем конфетти
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#2E8B57', '#90EE90', '#F5F5DC', '#FFD700', '#FF6B6B', '#4ECDC4', '#FFE66D'];
+            
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // Случайные свойства
+                const size = Math.random() * 15 + 5;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const left = Math.random() * 100;
+                const animationDuration = Math.random() * 3 + 2;
+                const animationDelay = Math.random() * 5;
+                
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.backgroundColor = color;
+                confetti.style.left = `${left}vw`;
+                confetti.style.animationDuration = `${animationDuration}s`;
+                confetti.style.animationDelay = `${animationDelay}s`;
+                
+                // Случайная форма
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                } else {
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                }
+                
+                container.appendChild(confetti);
+                
+                // Удаляем после анимации
+                setTimeout(() => {
+                    confetti.remove();
+                }, (animationDuration + animationDelay) * 1000);
+            }
+        }
+        
+        // Создаем фейерверки
+        function createFireworks() {
+            const container = document.getElementById('fireworks-container');
+            
+            setInterval(() => {
+                if (Math.random() > 0.7) { // 30% chance каждый интервал
+                    const firework = document.createElement('div');
+                    firework.className = 'fireworks';
+                    
+                    const x = Math.random() * 80 + 10; // 10% to 90%
+                    const y = Math.random() * 80 + 10;
+                    const size = Math.random() * 20 + 10;
+                    const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                    
+                    firework.style.setProperty('--x', `${x}vw`);
+                    firework.style.setProperty('--y', `${y}vh`);
+                    firework.style.width = `${size}px`;
+                    firework.style.height = `${size}px`;
+                    firework.style.backgroundColor = color;
+                    firework.style.animation = 'fireworks 1s ease-out forwards';
+                    
+                    container.appendChild(firework);
+                    
+                    // Создаем вспышки вокруг
+                    for (let i = 0; i < 8; i++) {
+                        setTimeout(() => {
+                            const spark = document.createElement('div');
+                            spark.className = 'fireworks';
+                            
+                            const angle = (i / 8) * 2 * Math.PI;
+                            const distance = Math.random() * 50 + 20;
+                            const sparkX = x + Math.cos(angle) * distance;
+                            const sparkY = y + Math.sin(angle) * distance;
+                            
+                            spark.style.setProperty('--x', `${sparkX}vw`);
+                            spark.style.setProperty('--y', `${sparkY}vh`);
+                            spark.style.width = `${size/3}px`;
+                            spark.style.height = `${size/3}px`;
+                            spark.style.backgroundColor = color;
+                            spark.style.animation = 'fireworks 0.5s ease-out forwards';
+                            
+                            container.appendChild(spark);
+                            
+                            setTimeout(() => spark.remove(), 500);
+                        }, i * 50);
+                    }
+                    
+                    setTimeout(() => firework.remove(), 1000);
+                }
+            }, 1000);
+        }        
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем переводы
+            loadLanguage(localStorage.getItem('opencv-learn-lang') || 'en');
+            
+            // Запускаем конфетти
+            createConfetti();
+            createFireworks();
+            
+            // Повторяем конфетти каждые 5 секунд
+            setInterval(createConfetti, 5000);
+        });
+        
+        // Добавляем переводы для страницы поздравлений
+        if (!translations.en['congrats-title']) {
+            Object.assign(translations.en, {
+                'congrats-title': '🎉 Congratulations! 🎉',
+                'achievement-title': 'Course Completed Successfully!',
+                'celebration-text': 'You\'ve successfully mastered all 14 lessons of OpenCV programming for drones! From basic image processing to advanced autonomous navigation - you\'ve done it all!',
+                'skills-mastered': 'Skills You\'ve Mastered:',
+                'lessons-completed': '14',
+                'lessons-label': 'Lessons Completed',
+                'code-examples': '50+',
+                'code-label': 'Code Examples Mastered',
+                'projects-ready': '6',
+                'projects-label': 'Projects Ready to Build',
+                'skills-learned': '15',
+                'skills-label': 'OpenCV Skills Learned',
+                'next-steps-title': 'Continue Your Journey!',
+                'continue-text': 'Your learning journey doesn\'t end here. Here are some ways to continue:',
+                'step1-title': 'Build Real Projects',
+                'step1-text': 'Use the project ideas from Lesson 14',
+                'step2-title': 'Join Communities',
+                'step2-text': 'Connect with other drone enthusiasts',
+                'step3-title': 'Explore Advanced Topics',
+                'step3-text': 'Learn machine learning for drones',
+                'final-message': 'Remember: Every expert was once a beginner. Keep coding, keep learning, and most importantly - have fun building amazing drone projects!',
+                'back-to-lessons': 'Back to Lessons',
+                'review-projects': 'Review Project Ideas'
+            });
+            
+            // Немецкие переводы
+            Object.assign(translations.de, {
+                'congrats-title': '🎉 Herzlichen Glückwunsch! 🎉',
+                'achievement-title': 'Kurs erfolgreich abgeschlossen!',
+                'celebration-text': 'Du hast alle 14 Lektionen der OpenCV-Programmierung für Drohnen gemeistert! Vom grundlegenden Bildverarbeitung bis zur fortgeschrittenen autonomen Navigation - du hast alles geschafft!',
+                'skills-mastered': 'Fähigkeiten, die du gemeistert hast:',
+                'lessons-completed': '14',
+                'lessons-label': 'Abgeschlossene Lektionen',
+                'code-examples': '50+',
+                'code-label': 'Code-Beispiele gemeistert',
+                'projects-ready': '6',
+                'projects-label': 'Baufertige Projekte',
+                'skills-learned': '15',
+                'skills-label': 'Erlernte OpenCV-Fähigkeiten',
+                'next-steps-title': 'Setze deine Reise fort!',
+                'continue-text': 'Deine Lernreise endet hier nicht. Hier sind einige Möglichkeiten weiterzumachen:',
+                'step1-title': 'Echte Projekte bauen',
+                'step1-text': 'Nutze die Projektideen aus Lektion 14',
+                'step2-title': 'Communities beitreten',
+                'step2-text': 'Verbinde dich mit anderen Drohnen-Enthusiasten',
+                'step3-title': 'Fortgeschrittene Themen erkunden',
+                'step3-text': 'Lerne maschinelles Lernen für Drohnen',
+                'final-message': 'Denk daran: Jeder Experte war einmal ein Anfänger. Programmiere weiter, lerne weiter und vor allem - hab Spaß beim Bauen erstaunlicher Drohnenprojekte!',
+                'back-to-lessons': 'Zurück zu den Lektionen',
+                'review-projects': 'Projektideen überprüfen'
+            });
+            
+            // Русские переводы
+            Object.assign(translations.ru, {
+                'congrats-title': '🎉 Поздравляем! 🎉',
+                'achievement-title': 'Курс успешно завершён!',
+                'celebration-text': 'Вы успешно освоили все 14 уроков программирования дронов на OpenCV! От базовой обработки изображений до продвинутой автономной навигации - вы сделали это!',
+                'skills-mastered': 'Навыки, которые вы освоили:',
+                'lessons-completed': '14',
+                'lessons-label': 'Пройденных уроков',
+                'code-examples': '50+',
+                'code-label': 'Примеров кода освоено',
+                'projects-ready': '6',
+                'projects-label': 'Проектов готовы к созданию',
+                'skills-learned': '15',
+                'skills-label': 'Навыков OpenCV изучено',
+                'next-steps-title': 'Продолжайте своё путешествие!',
+                'continue-text': 'Ваше обучение на этом не заканчивается. Вот несколько способов продолжить:',
+                'step1-title': 'Создавайте реальные проекты',
+                'step1-text': 'Используйте идеи проектов из Урока 14',
+                'step2-title': 'Присоединяйтесь к сообществам',
+                'step2-text': 'Общайтесь с другими энтузиастами дронов',
+                'step3-title': 'Изучайте продвинутые темы',
+                'step3-text': 'Изучите машинное обучение для дронов',
+                'final-message': 'Помните: каждый эксперт когда-то был новичком. Продолжайте программировать, продолжайте учиться и, самое главное, получайте удовольствие от создания удивительных проектов с дронами!',
+                'back-to-lessons': 'Назад к урокам',
+                'review-projects': 'Обзор идей проектов'
+            });
+        }
+    </script>
+</body>
+</html>

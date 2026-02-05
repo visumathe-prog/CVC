@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 7: Threshold Processing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson7-full-title">Lesson 7: Threshold Processing</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-cut"></i> <span id="lesson7-concept-title">Black & White for Clarity</span></h2>
+                <p id="lesson7-concept-text">Sometimes color is confusing. Threshold makes images black and white based on brightness. This simplifies drone photos to find objects easier. Like looking at a shadow instead of the object!</p>
+                
+                <div class="threshold-types">
+                    <div class="threshold-item">
+                        <h3><i class="fas fa-greater-than"></i> Simple Threshold</h3>
+                        <p id="simple-thresh-text">Pixels brighter than value = white, darker = black</p>
+                    </div>
+                    <div class="threshold-item">
+                        <h3><i class="fas fa-adjust"></i> Adaptive Threshold</h3>
+                        <p id="adaptive-thresh-text">Smart - changes threshold for different image areas</p>
+                    </div>
+                    <div class="threshold-item">
+                        <h3><i class="fas fa-random"></i> Otsu's Method</h3>
+                        <p id="otsu-text">Automatic - finds best threshold by itself</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson7-commands-title">Threshold Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)</code>
+                        <p id="thresh-binary-text">Simple threshold: Above 127 = white, below = black</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)</code>
+                        <p id="otsu-cmd-text">Otsu method: Automatically finds best value</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)</code>
+                        <p id="adaptive-cmd-text">Adaptive: Good for uneven lighting in forests</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.THRESH_BINARY_INV</code>
+                        <p id="thresh-inv-text">Inverse: White becomes black, black becomes white</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson7-example-title">Drone Forest Analyzer</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone Forest Analyzer - Find trees using threshold
+import cv2
+import numpy as np
+
+print("=== Drone Forest Threshold Analyzer ===")
+print("Mission: Convert forest photos to black/white for tree counting")
+
+# 1. Create forest scene with varying lighting (sun and shadow)
+height, width = 400, 600
+forest = np.zeros((height, width), dtype=np.uint8)
+
+# Create trees (bright objects on dark background)
+for i in range(15):
+    x = np.random.randint(50, 550)
+    y = np.random.randint(50, 350)
+    size = np.random.randint(20, 50)
+    # Tree as circle (bright)
+    cv2.circle(forest, (x, y), size, 200, -1)
+
+# Add shadow areas (dark patches under trees)
+for i in range(5):
+    x = np.random.randint(100, 500)
+    y = np.random.randint(100, 300)
+    w = np.random.randint(80, 150)
+    h = np.random.randint(80, 150)
+    forest[y:y+h, x:x+w] = forest[y:y+h, x:x+w] // 2  # Make darker
+
+print("Created forest with 15 trees and shadow areas")
+cv2.imshow('1. Original Grayscale Forest', forest)
+
+# 2. SIMPLE THRESHOLD - Fixed value
+_, simple_binary = cv2.threshold(forest, 127, 255, cv2.THRESH_BINARY)
+cv2.imshow('2. Simple Threshold (127)', simple_binary)
+print("Applied simple threshold at value 127")
+
+# 3. OTSU THRESHOLD - Automatic optimal value
+_, otsu_binary = cv2.threshold(forest, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+cv2.imshow('3. Otsu Threshold (Automatic)', otsu_binary)
+print(f"Applied Otsu - automatically found best threshold")
+
+# 4. ADAPTIVE THRESHOLD - Handles shadows
+adaptive_binary = cv2.adaptiveThreshold(forest, 255, 
+                                        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                        cv2.THRESH_BINARY, 11, 2)
+cv2.imshow('4. Adaptive Threshold (Smart)', adaptive_binary)
+print("Applied adaptive threshold for uneven lighting")
+
+# 5. INVERSE THRESHOLD - Trees become black, background white
+_, inverse_binary = cv2.threshold(forest, 127, 255, cv2.THRESH_BINARY_INV)
+cv2.imshow('5. Inverse Threshold', inverse_binary)
+print("Applied inverse threshold")
+
+# 6. COMPARISON
+comparison = np.zeros((height*2, width*2), dtype=np.uint8)
+comparison[0:height, 0:width] = forest
+comparison[0:height, width:width*2] = simple_binary
+comparison[height:height*2, 0:width] = otsu_binary
+comparison[height:height*2, width:width*2] = adaptive_binary
+
+cv2.imshow('6. Comparison: All Methods', comparison)
+
+print("\n=== Threshold Analysis ===")
+print("Simple: Fast but fails in shadows")
+print("Otsu: Automatic but needs good contrast")
+print("Adaptive: Best for real drone photos with shadows")
+
+print("\nPress any key for tree counting...")
+cv2.waitKey(0)
+
+# 7. TREE COUNTING WITH BEST THRESHOLD
+print("\n=== Tree Counting Results ===")
+
+# Use adaptive threshold for counting (best for shadows)
+binary_for_counting = adaptive_binary.copy()
+
+# Find trees (connected white components)
+contours, _ = cv2.findContours(binary_for_counting, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Create result visualization
+result_img = cv2.cvtColor(forest, cv2.COLOR_GRAY2BGR)
+tree_count = 0
+
+for contour in contours:
+    area = cv2.contourArea(contour)
+    if area > 100:  # Filter small noise
+        # Get bounding circle
+        (x, y), radius = cv2.minEnclosingCircle(contour)
+        center = (int(x), int(y))
+        radius = int(radius)
+        
+        # Draw circle around tree
+        cv2.circle(result_img, center, radius, (0, 0, 255), 2)
+        cv2.circle(result_img, center, 3, (0, 255, 0), -1)
+        
+        tree_count += 1
+
+# Add statistics
+font = cv2.FONT_HERSHEY_SIMPLEX
+cv2.putText(result_img, f'Trees: {tree_count}', (20, 40), font, 1, (0, 255, 0), 2)
+cv2.putText(result_img, 'Adaptive Threshold', (20, 80), font, 0.7, (255, 255, 255), 2)
+
+cv2.imshow('7. Tree Counting Results', result_img)
+print(f"Trees counted: {tree_count} (out of 15 planted)")
+print(f"Accuracy: {(tree_count/15*100):.1f}%")
+
+# 8. THRESHOLD VISUALIZATION TOOL
+print("\n=== Interactive Threshold Demo ===")
+print("Move slider to see different threshold values")
+
+def update_threshold(val):
+    _, dynamic_binary = cv2.threshold(forest, val, 255, cv2.THRESH_BINARY)
+    
+    # Count trees at this threshold
+    contours, _ = cv2.findContours(dynamic_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    temp_count = 0
+    for contour in contours:
+        if cv2.contourArea(contour) > 100:
+            temp_count += 1
+    
+    # Show result
+    display = cv2.cvtColor(dynamic_binary, cv2.COLOR_GRAY2BGR)
+    cv2.putText(display, f'Threshold: {val}', (20, 40), font, 1, (0, 255, 0), 2)
+    cv2.putText(display, f'Trees: {temp_count}', (20, 80), font, 1, (0, 255, 0), 2)
+    cv2.imshow('8. Interactive Threshold Tool', display)
+
+# Create window and slider
+cv2.namedWindow('8. Interactive Threshold Tool')
+cv2.createTrackbar('Threshold', '8. Interactive Threshold Tool', 127, 255, update_threshold)
+update_threshold(127)  # Initial display
+
+print("\nDrag slider to see how threshold affects tree detection")
+print("Lower values = more white (more trees detected)")
+print("Higher values = more black (fewer trees detected)")
+
+print("\nPress any key to exit...")
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+print("\n=== Mission Complete ===")
+print("Thresholding converts complex images to simple black/white")
+print("This makes object counting much easier for drones!")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson7-practice-title">Practice: Find Best Threshold</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor7" placeholder="Try using adaptive threshold for forest with shadows..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn7">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn7">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message7"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-sun"></i> <span id="lesson7-real-title">Drone at Different Times:</span></h3>
+                    <p id="lesson7-real-text">Morning drone photos are dark, noon photos are bright with shadows. Adaptive threshold handles both! Agriculture drones use this to count plants regardless of sunlight.</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson6.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson8.html" class="btn-next">
+                    <span id="next-text">Next: Contours & Morphology</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .threshold-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .threshold-item {
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .threshold-item h3 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 7
+        if (!translations.en['lesson7-full-title']) {
+            Object.assign(translations.en, {
+                'lesson7-full-title': 'Lesson 7: Threshold Processing',
+                'lesson7-concept-title': 'Black & White for Clarity',
+                'lesson7-concept-text': 'Sometimes color is confusing. Threshold makes images black and white based on brightness. This simplifies drone photos to find objects easier. Like looking at a shadow instead of the object!',
+                'simple-thresh-text': 'Pixels brighter than value = white, darker = black',
+                'adaptive-thresh-text': 'Smart - changes threshold for different image areas',
+                'otsu-text': 'Automatic - finds best threshold by itself',
+                'lesson7-commands-title': 'Threshold Commands',
+                'thresh-binary-text': 'Simple threshold: Above 127 = white, below = black',
+                'otsu-cmd-text': 'Otsu method: Automatically finds best value',
+                'adaptive-cmd-text': 'Adaptive: Good for uneven lighting in forests',
+                'thresh-inv-text': 'Inverse: White becomes black, black becomes white',
+                'lesson7-example-title': 'Drone Forest Analyzer',
+                'lesson7-practice-title': 'Practice: Find Best Threshold',
+                'lesson7-real-title': 'Drone at Different Times:',
+                'lesson7-real-text': 'Morning drone photos are dark, noon photos are bright with shadows. Adaptive threshold handles both! Agriculture drones use this to count plants regardless of sunlight.'
+            });
+
+            Object.assign(translations.de, {
+                'lesson7-full-title': 'Lektion 7: Schwellenwert-verarbeitung',
+                'lesson7-concept-title': 'Schwarz-Weiß für Klarheit',
+                'lesson7-concept-text': 'Manchmal stören Farben. Schwellenwert macht Bilder schwarz-weiß basierend auf Helligkeit. Dies vereinfacht Drohnenfotos, um Objekte leichter zu finden. Wie auf einen Schatten statt auf das Objekt schauen!',
+                'simple-thresh-text': 'Pixel heller als Wert = weiß, dunkler = schwarz',
+                'adaptive-thresh-text': 'Intelligent - ändert Schwellenwert für verschiedene Bildbereiche',
+                'otsu-text': 'Automatisch - findet besten Schwellenwert selbst',
+                'lesson7-commands-title': 'Schwellenwert-Commands',
+                'thresh-binary-text': 'Einfacher Schwellenwert: Über 127 = weiß, unter = schwarz',
+                'otsu-cmd-text': 'Otsu-Methode: Findet automatisch besten Wert',
+                'adaptive-cmd-text': 'Adaptiv: Gut für ungleichmäßige Beleuchtung im Wald',
+                'thresh-inv-text': 'Invertiert: Weiß wird schwarz, schwarz wird weiß',
+                'lesson7-example-title': 'Drohnen-Wald-Analysator',
+                'lesson7-practice-title': 'Übung: Besten Schwellenwert finden',
+                'lesson7-real-title': 'Drohne zu verschiedenen Tageszeiten:',
+                'lesson7-real-text': 'Morgendliche Drohnenfotos sind dunkel, Mittagsfotos hell mit Schatten. Adaptiver Schwellenwert bewältigt beides! Landwirtschaftsdrohnen nutzen das, um Pflanzen unabhängig von Sonnenlicht zu zählen.'
+            });
+
+
+            Object.assign(translations.ru, {
+                'lesson7-full-title': 'Урок 7: Пороговая обработка',
+                'lesson7-concept-title': 'Чёрно-белое для ясности',
+                'lesson7-concept-text': 'Иногда цвет мешает. Пороговое преобразование делает изображения чёрно-белыми на основе яркости. Это упрощает фото с дрона, чтобы легче находить объекты. Как смотреть на тень вместо самого объекта!',
+                'simple-thresh-text': 'Пиксели светлее значения = белые, темнее = чёрные',
+                'adaptive-thresh-text': 'Умное - меняет порог для разных участков изображения',
+                'otsu-text': 'Автоматическое - само находит лучший порог',
+                'lesson7-commands-title': 'Команды порогового преобразования',
+                'thresh-binary-text': 'Простой порог: Выше 127 = белый, ниже = чёрный',
+                'otsu-cmd-text': 'Метод Отсу: Автоматически находит лучшее значение',
+                'adaptive-cmd-text': 'Адаптивное: Хорошо для неравномерного освещения в лесу',
+                'thresh-inv-text': 'Инверсия: Белое становится чёрным, чёрное - белым',
+                'lesson7-example-title': 'Анализатор леса для дрона',
+                'lesson7-practice-title': 'Практика: Найти лучший порог',
+                'lesson7-real-title': 'Дрон в разное время суток:',
+                'lesson7-real-text': 'Утренние фото дрона тёмные, дневные - яркие с тенями. Адаптивный порог работает в обоих случаях! Сельскохозяйственные дроны используют это для подсчёта растений независимо от солнца.'
+            });
+        }
+        
+        document.getElementById('check-btn7')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor7').value;
+            const feedback = document.getElementById('feedback-message7');
+            
+            if (code.includes('cv2.adaptiveThreshold')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Perfect! Adaptive threshold handles shadows perfectly!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.threshold')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good! Simple threshold works, but try adaptive for shadows.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Try using adaptive threshold for forest with shadows.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn7')?.addEventListener('click', function() {
+            document.getElementById('code-editor7').value = '';
+            document.getElementById('feedback-message7').innerHTML = '';
+            document.getElementById('feedback-message7').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 7 как пройденный
+        markLessonComplete(7);
+    </script>
+</body>
+</html>

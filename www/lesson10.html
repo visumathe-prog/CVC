@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 10: Object Recognition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson10-full-title">Lesson 10: Object Recognition</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-eye"></i> <span id="lesson10-concept-title">Smart Drone Vision</span></h2>
+                <p id="lesson10-concept-text">Now your drone doesn't just see shapes - it recognizes WHAT it sees! Object recognition identifies specific objects like trees, birds, or people. This is how drones deliver packages to right addresses!</p>
+                
+                <div class="recognition-methods">
+                    <div class="method-item">
+                        <i class="fas fa-shapes"></i>
+                        <h3>Template Matching</h3>
+                        <p id="template-text">Find objects by comparing with known templates</p>
+                    </div>
+                    <div class="method-item">
+                        <i class="fas fa-feather-alt"></i>
+                        <h3>Feature Matching</h3>
+                        <p id="feature-text">Find key points and match them between images</p>
+                    </div>
+                    <div class="method-item">
+                        <i class="fas fa-brain"></i>
+                        <h3>Machine Learning</h3>
+                        <p id="ml-text">AI models that learn to recognize objects</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-list"></i> <span id="lesson10-commands-title">Object Recognition Commands</span></h2>
+                <div class="commands-list">
+                    <div class="command-item">
+                        <code>cv2.matchTemplate(image, template, method)</code>
+                        <p id="matchtemplate-text">Finds template in image. Good for known object shapes.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.minMaxLoc(result)</code>
+                        <p id="minmaxloc-text">Finds best match location in template matching.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.SIFT_create()</code>
+                        <p id="sift-text">Creates SIFT detector for feature matching.</p>
+                    </div>
+                    
+                    <div class="command-item">
+                        <code>cv2.BFMatcher()</code>
+                        <p id="bfmatcher-text">Brute force matcher for comparing features.</p>
+                    </div>
+                </div>
+                
+                <h2><i class="fas fa-code"></i> <span id="lesson10-example-title">Drone Object Recognition System</span></h2>
+                <div class="code-block">
+                    <pre><code># Drone Object Recognition System
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("=== Drone Object Recognition System ===")
+print("Mission: Recognize different objects in drone images")
+
+def create_sample_objects():
+    """Create sample objects for recognition training"""
+    objects = {}
+    
+    # 1. TREE template
+    tree = np.zeros((100, 100, 3), dtype=np.uint8)
+    tree[:, :] = [40, 80, 40]  # Green background
+    
+    # Draw tree shape (triangle on rectangle)
+    # Trunk
+    cv2.rectangle(tree, (45, 70), (55, 100), (50, 30, 10), -1)
+    # Leaves (triangle)
+    pts = np.array([[50, 20], [20, 70], [80, 70]], np.int32)
+    cv2.fillPoly(tree, [pts], (0, 100, 0))
+    
+    objects['tree'] = tree
+    
+    # 2. HOUSE template
+    house = np.zeros((100, 100, 3), dtype=np.uint8)
+    house[:, :] = [200, 200, 200]  # Gray background
+    
+    # House body
+    cv2.rectangle(house, (20, 50), (80, 100), (180, 100, 50), -1)
+    # Roof (triangle)
+    roof_pts = np.array([[20, 50], [50, 20], [80, 50]], np.int32)
+    cv2.fillPoly(house, [roof_pts], (150, 80, 50), -1)
+    # Door
+    cv2.rectangle(house, (45, 70), (55, 100), (100, 50, 30), -1)
+    # Windows
+    cv2.rectangle(house, (30, 60), (40, 70), (100, 200, 255), -1)
+    cv2.rectangle(house, (60, 60), (70, 70), (100, 200, 255), -1)
+    
+    objects['house'] = house
+    
+    # 3. CAR template
+    car = np.zeros((60, 100, 3), dtype=np.uint8)
+    car[:, :] = [50, 50, 200]  # Blue background
+    
+    # Car body
+    cv2.rectangle(car, (10, 20), (90, 50), (200, 50, 50), -1)
+    # Roof
+    roof_car = np.array([[30, 20], [50, 10], [70, 20]], np.int32)
+    cv2.fillPoly(car, [roof_car], (180, 50, 50), -1)
+    # Wheels
+    cv2.circle(car, (25, 50), 10, (0, 0, 0), -1)
+    cv2.circle(car, (75, 50), 10, (0, 0, 0), -1)
+    
+    objects['car'] = car
+    
+    # 4. PERSON template
+    person = np.zeros((100, 50, 3), dtype=np.uint8)
+    person[:, :] = [240, 240, 240]  # Light background
+    
+    # Head
+    cv2.circle(person, (25, 20), 10, (200, 150, 100), -1)
+    # Body
+    cv2.rectangle(person, (20, 30), (30, 70), (100, 100, 200), -1)
+    # Arms
+    cv2.line(person, (10, 40), (40, 40), (100, 100, 200), 3)
+    # Legs
+    cv2.line(person, (25, 70), (15, 90), (50, 50, 150), 3)
+    cv2.line(person, (25, 70), (35, 90), (50, 50, 150), 3)
+    
+    objects['person'] = person
+    
+    return objects
+
+def template_matching_demo():
+    """Demo of template matching for object recognition"""
+    print("\n=== Template Matching Demo ===")
+    
+    # Create templates
+    templates = create_sample_objects()
+    
+    # Create test scene (drone view)
+    scene = np.zeros((400, 600, 3), dtype=np.uint8)
+    scene[:, :] = [150, 200, 150]  # Green field background
+    
+    # Add sky
+    scene[0:150, :] = [200, 220, 255]
+    
+    # Place objects in scene
+    # Trees
+    scene[200:300, 100:200] = templates['tree'][20:120, 0:100]
+    scene[150:250, 400:500] = templates['tree'][20:120, 0:100]
+    
+    # House
+    scene[250:350, 250:350] = templates['house'][0:100, 0:100]
+    
+    # Car
+    scene[300:360, 450:550] = templates['car'][0:60, 0:100]
+    
+    # Person (scaled down)
+    person_scaled = cv2.resize(templates['person'], (30, 60))
+    scene[320:380, 200:230] = person_scaled
+    
+    print("Created drone scene with: 2 trees, 1 house, 1 car, 1 person")
+    cv2.imshow('Drone Scene', scene)
+    
+    # Template matching for each object type
+    detection_results = scene.copy()
+    
+    for obj_name, template in templates.items():
+        print(f"\nLooking for {obj_name}s...")
+        
+        # Convert to grayscale for matching
+        scene_gray = cv2.cvtColor(scene, cv2.COLOR_BGR2GRAY)
+        template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+        
+        # Get template dimensions
+        h, w = template_gray.shape
+        
+        # Perform template matching
+        result = cv2.matchTemplate(scene_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+        
+        # Set threshold for detection
+        threshold = 0.6
+        
+        # Find locations where result exceeds threshold
+        locations = np.where(result >= threshold)
+        
+        # Draw rectangles around matches
+        matches = 0
+        for pt in zip(*locations[::-1]):  # Switch columns and rows
+            # Check if this match overlaps with previous matches
+            overlap = False
+            for prev_pt in detected_locations.get(obj_name, []):
+                if abs(pt[0] - prev_pt[0]) < w and abs(pt[1] - prev_pt[1]) < h:
+                    overlap = True
+                    break
+            
+            if not overlap:
+                cv2.rectangle(detection_results, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+                cv2.putText(detection_results, obj_name, (pt[0], pt[1]-10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                matches += 1
+                
+                # Store location
+                if obj_name not in detected_locations:
+                    detected_locations[obj_name] = []
+                detected_locations[obj_name].append(pt)
+        
+        print(f"Found {matches} {obj_name}(s)")
+    
+    cv2.imshow('Template Matching Results', detection_results)
+    
+    return scene, templates
+
+def feature_matching_demo(scene, templates):
+    """Demo of feature matching for object recognition"""
+    print("\n=== Feature Matching Demo ===")
+    print("Using SIFT features for more robust recognition")
+    
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create()
+    
+    # Create visualization
+    feature_results = scene.copy()
+    
+    for obj_name, template in templates.items():
+        print(f"\nFeature matching for {obj_name}...")
+        
+        # Find keypoints and descriptors with SIFT
+        kp1, des1 = sift.detectAndCompute(template, None)
+        kp2, des2 = sift.detectAndCompute(scene, None)
+        
+        if des1 is not None and des2 is not None:
+            # BFMatcher with default params
+            bf = cv2.BFMatcher()
+            matches = bf.knnMatch(des1, des2, k=2)
+            
+            # Apply ratio test
+            good_matches = []
+            for m, n in matches:
+                if m.distance < 0.75 * n.distance:
+                    good_matches.append(m)
+            
+            print(f"Good matches found: {len(good_matches)}")
+            
+            if len(good_matches) > 10:
+                # Get location of template in scene
+                src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                
+                # Find homography
+                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                
+                if M is not None:
+                    # Get template corners
+                    h, w = template.shape[:2]
+                    pts = np.float32([[0, 0], [0, h-1], [w-1, h-1], [w-1, 0]]).reshape(-1, 1, 2)
+                    
+                    # Transform corners to scene
+                    dst = cv2.perspectiveTransform(pts, M)
+                    
+                    # Draw bounding polygon
+                    feature_results = cv2.polylines(feature_results, [np.int32(dst)], True, (0, 255, 0), 3)
+                    cv2.putText(feature_results, f'SIFT: {obj_name}', 
+                               (int(dst[0][0][0]), int(dst[0][0][1])-10),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        # Draw keypoints on template (for visualization)
+        template_with_kp = cv2.drawKeypoints(template, kp1, None, color=(0, 255, 0))
+        cv2.imshow(f'{obj_name} Keypoints', template_with_kp)
+    
+    cv2.imshow('Feature Matching Results', feature_results)
+    
+    return feature_results
+
+def drone_object_recognition_pipeline():
+    """Complete drone object recognition pipeline"""
+    print("\n" + "="*50)
+    print("DRONE OBJECT RECOGNITION PIPELINE")
+    print("="*50)
+    
+    # Step 1: Create or load drone scene
+    print("\nStep 1: Loading drone scene...")
+    scene, templates = template_matching_demo()
+    
+    # Step 2: Template matching (fast but less accurate)
+    print("\nStep 2: Performing template matching...")
+    detected_locations = {}
+    template_result = scene.copy()
+    
+    # Step 3: Feature matching (slower but more robust)
+    print("\nStep 3: Performing feature matching...")
+    feature_result = feature_matching_demo(scene, templates)
+    
+    # Step 4: Combine results
+    print("\nStep 4: Combining results...")
+    combined = scene.copy()
+    
+    # Create summary image
+    summary = np.zeros((400, 1200, 3), dtype=np.uint8)
+    summary[0:400, 0:600] = scene
+    summary[0:400, 600:1200] = feature_result
+    
+    # Add labels
+    cv2.putText(summary, 'Original Scene', (10, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    cv2.putText(summary, 'Object Recognition Result', (610, 30), 
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    
+    cv2.imshow('Object Recognition Summary', summary)
+    
+    # Step 5: Generate report
+    print("\n" + "="*50)
+    print("RECOGNITION REPORT")
+    print("="*50)
+    print("\nObjects in scene:")
+    print("- 2 Trees (green triangles)")
+    print("- 1 House (brown rectangle with roof)")
+    print("- 1 Car (red rectangle with wheels)")
+    print("- 1 Person (blue stick figure)")
+    
+    print("\nRecognition methods:")
+    print("1. Template Matching: Fast, works for known shapes")
+    print("2. Feature Matching (SIFT): Robust to scale/rotation")
+    print("3. Machine Learning (not shown): Best for real-world objects")
+    
+    print("\nReal drone applications:")
+    print("✓ Package delivery: Recognize houses/addresses")
+    print("✓ Search & rescue: Recognize people in disaster areas")
+    print("✓ Agriculture: Recognize crops vs weeds")
+    print("✓ Security: Recognize vehicles/people in restricted areas")
+    
+    return summary
+
+def real_world_example():
+    """Example using pre-trained models (conceptual)"""
+    print("\n=== Real-World Example ===")
+    print("\nFor real drone applications, use pre-trained models:")
+    print("\n1. YOLO (You Only Look Once):")
+    print("   - Fast real-time object detection")
+    print("   - Can recognize 80+ object types")
+    print("   - Good for drone obstacle avoidance")
+    
+    print("\n2. SSD (Single Shot Detector):")
+    print("   - Balance of speed and accuracy")
+    print("   - Good for mobile/drone applications")
+    
+    print("\n3. TensorFlow Lite models:")
+    print("   - Optimized for mobile devices")
+    print("   - Low power consumption")
+    print("   - Perfect for battery-powered drones")
+    
+    print("\nExample code structure for real implementation:")
+    print("""
+# Real drone object detection with YOLO
+def detect_objects_yolo(frame):
+    # Load pre-trained YOLO model
+    net = cv2.dnn.readNet("yolo.weights", "yolo.cfg")
+    
+    # Prepare input blob
+    blob = cv2.dnn.blobFromImage(frame, 1/255.0, (416, 416), swapRB=True, crop=False)
+    net.setInput(blob)
+    
+    # Get detection results
+    detections = net.forward()
+    
+    # Process detections
+    for detection in detections:
+        # Extract confidence and class
+        confidence = detection[5]
+        if confidence > 0.5:
+            # Draw bounding box and label
+            # [Implementation details...]
+    
+    return frame_with_detections
+    """)
+
+# Main execution
+if __name__ == "__main__":
+    detected_locations = {}
+    
+    print("Starting Drone Object Recognition System...")
+    
+    # Run complete pipeline
+    result = drone_object_recognition_pipeline()
+    
+    # Show real-world example
+    real_world_example()
+    
+    print("\nPress any key to continue...")
+    cv2.waitKey(0)
+    
+    print("\n=== Interactive Demo ===")
+    print("\nCreating interactive object recognition demo...")
+    
+    # Create simple interactive demo
+    interactive_bg = np.zeros((300, 500, 3), dtype=np.uint8)
+    interactive_bg[:] = [200, 220, 200]
+    
+    objects = create_sample_objects()
+    
+    # Display all object templates
+    templates_display = np.zeros((120, 400, 3), dtype=np.uint8)
+    templates_display[:] = [240, 240, 240]
+    
+    x_offset = 0
+    for obj_name, template in objects.items():
+        h, w = template.shape[:2]
+        end_x = x_offset + w
+        if end_x <= 400:
+            templates_display[10:10+h, x_offset:x_offset+w] = template
+            cv2.putText(templates_display, obj_name, (x_offset+5, 10+h+15), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
+            x_offset += w + 20
+    
+    cv2.imshow('Object Templates (Drag to scene)', templates_display)
+    
+    print("\nObject recognition demo ready!")
+    print("Templates shown: tree, house, car, person")
+    
+    print("\nPress any key to exit...")
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    print("\n=== Mission Complete ===")
+    print("Your drone can now recognize objects!")
+    print("Next step: Use this for autonomous navigation")</code></pre>
+                </div>
+                
+                <h2><i class="fas fa-keyboard"></i> <span id="lesson10-practice-title">Practice: Add New Object Template</span></h2>
+                <div class="practice-area">
+                    <textarea id="code-editor10" placeholder="Try adding a bird template to the recognition system..."></textarea>
+                    <div class="practice-buttons">
+                        <button class="btn-check" id="check-btn10">
+                            <i class="fas fa-check"></i>
+                            <span id="check-text">Check Code</span>
+                        </button>
+                        <button class="btn-clear" id="clear-btn10">
+                            <i class="fas fa-eraser"></i>
+                            <span id="clear-text">Clear</span>
+                        </button>
+                    </div>
+                    <div id="feedback-message10"></div>
+                </div>
+                
+                <div class="real-life-example">
+                    <h3><i class="fas fa-shipping-fast"></i> <span id="lesson10-real-title">Delivery Drone:</span></h3>
+                    <p id="lesson10-real-text">Amazon delivery drones recognize specific house numbers. Wildlife drones identify animal species. Your drone could recognize friends' houses for personal deliveries!</p>
+                </div>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson9.html" class="btn-prev">
+                    <i class="fas fa-arrow-left"></i>
+                    <span id="prev-text">Previous Lesson</span>
+                </a>
+                <a href="lesson11.html" class="btn-next">
+                    <span id="next-text">Next: Motion Detection</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .recognition-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .method-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--beige);
+            border-radius: 10px;
+            border-top: 4px solid var(--primary-green);
+        }
+        
+        .method-item i {
+            font-size: 2.5rem;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        // Добавляем переводы для урока 10
+        if (!translations.en['lesson10-full-title']) {
+            Object.assign(translations.en, {
+                'lesson10-full-title': 'Lesson 10: Object Recognition',
+                'lesson10-concept-title': 'Smart Drone Vision',
+                'lesson10-concept-text': 'Now your drone doesn\'t just see shapes - it recognizes WHAT it sees! Object recognition identifies specific objects like trees, birds, or people. This is how drones deliver packages to right addresses!',
+                'template-text': 'Find objects by comparing with known templates',
+                'feature-text': 'Find key points and match them between images',
+                'ml-text': 'AI models that learn to recognize objects',
+                'lesson10-commands-title': 'Object Recognition Commands',
+                'matchtemplate-text': 'Finds template in image. Good for known object shapes.',
+                'minmaxloc-text': 'Finds best match location in template matching.',
+                'sift-text': 'Creates SIFT detector for feature matching.',
+                'bfmatcher-text': 'Brute force matcher for comparing features.',
+                'lesson10-example-title': 'Drone Object Recognition System',
+                'lesson10-practice-title': 'Practice: Add New Object Template',
+                'lesson10-real-title': 'Delivery Drone:',
+                'lesson10-real-text': 'Amazon delivery drones recognize specific house numbers. Wildlife drones identify animal species. Your drone could recognize friends\' houses for personal deliveries!'
+            });
+
+            Object.assign(translations.de, {
+                'lesson10-full-title': 'Lektion 10: Objekt-erkennung',
+                'lesson10-concept-title': 'Intelligente Drohnen-Sicht',
+                'lesson10-concept-text': 'Jetzt erkennt deine Drohne nicht nur Formen - sie erkennt, WAS sie sieht! Objekterkennung identifiziert bestimmte Objekte wie Bäume, Vögel oder Menschen. So liefern Drohnen Pakete an die richtige Adresse!',
+                'template-text': 'Objekte durch Vergleich mit bekannten Vorlagen finden',
+                'feature-text': 'Schlüsselpunkte finden und zwischen Bildern abgleichen',
+                'ml-text': 'KI-Modelle, die lernen, Objekte zu erkennen',
+                'lesson10-commands-title': 'Objekterkennungs-Commands',
+                'matchtemplate-text': 'Findet Vorlage im Bild. Gut für bekannte Objektformen.',
+                'minmaxloc-text': 'Findet beste Übereinstimmungsstelle bei Vorlagenabgleich.',
+                'sift-text': 'Erstellt SIFT-Detektor für Feature-Matching.',
+                'bfmatcher-text': 'Brute-Force-Matcher zum Vergleichen von Features.',
+                'lesson10-example-title': 'Drohnen-Objekterkennungssystem',
+                'lesson10-practice-title': 'Übung: Neue Objektvorlage hinzufügen',
+                'lesson10-real-title': 'Lieferdrohne:',
+                'lesson10-real-text': 'Amazon-Lieferdrohnen erkennen spezifische Hausnummern. Wildtier-Drohnen identifizieren Tierarten. Deine Drohne könnte Häuser von Freunden für persönliche Lieferungen erkennen!'
+            });
+
+            Object.assign(translations.ru, {
+                'lesson10-full-title': 'Урок 10: Распознавание объектов',
+                'lesson10-concept-title': 'Умное зрение дрона',
+                'lesson10-concept-text': 'Теперь твой дрон не просто видит формы - он распознаёт, ЧТО он видит! Распознавание объектов определяет конкретные объекты, как деревья, птицы или люди. Так дроны доставляют посылки по правильным адресам!',
+                'template-text': 'Находит объекты, сравнивая с известными шаблонами',
+                'feature-text': 'Находит ключевые точки и сопоставляет их между изображениями',
+                'ml-text': 'AI-модели, которые учатся распознавать объекты',
+                'lesson10-commands-title': 'Команды распознавания объектов',
+                'matchtemplate-text': 'Находит шаблон на изображении. Хорошо для известных форм объектов.',
+                'minmaxloc-text': 'Находит лучшее место совпадения при сопоставлении шаблонов.',
+                'sift-text': 'Создаёт детектор SIFT для сопоставления особенностей.',
+                'bfmatcher-text': 'Метод грубой силы для сравнения особенностей.',
+                'lesson10-example-title': 'Система распознавания объектов для дрона',
+                'lesson10-practice-title': 'Практика: Добавить новый шаблон объекта',
+                'lesson10-real-title': 'Дрон-доставщик:',
+                'lesson10-real-text': 'Дроны Amazon распознают конкретные номера домов. Дроны для дикой природы определяют виды животных. Твой дрон мог бы распознавать дома друзей для персональных доставок!'
+            });
+
+        }
+        
+        document.getElementById('check-btn10')?.addEventListener('click', function() {
+            const code = document.getElementById('code-editor10').value;
+            const feedback = document.getElementById('feedback-message10');
+            
+            if (code.includes('matchTemplate') || code.includes('SIFT')) {
+                feedback.innerHTML = '<i class="fas fa-check-circle success"></i> Excellent! Your drone can now recognize specific objects!';
+                feedback.className = 'feedback success';
+            } else if (code.includes('cv2.rectangle') || code.includes('cv2.circle')) {
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle partial"></i> Good template creation! Now add recognition code.';
+                feedback.className = 'feedback partial';
+            } else {
+                feedback.innerHTML = '<i class="fas fa-times-circle error"></i> Try creating a template and using matchTemplate to find it.';
+                feedback.className = 'feedback error';
+            }
+        });
+        
+        document.getElementById('clear-btn10')?.addEventListener('click', function() {
+            document.getElementById('code-editor10').value = '';
+            document.getElementById('feedback-message10').innerHTML = '';
+            document.getElementById('feedback-message10').className = 'feedback';
+        });
+    </script>
+    <script>
+        // Отмечаем урок 10 как пройденный
+        markLessonComplete(10);
+    </script>
+</body>
+</html>

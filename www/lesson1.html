@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1: Introduction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="lesson-header">
+            <a href="main.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span id="back-text">Back</span>
+            </a>
+            <h1 id="lesson1-full-title">Lesson 1: Introduction to OpenCV</h1>
+        </header>
+        
+        <main class="lesson-content">
+            <div class="explanation-box">
+                <h2><i class="fas fa-info-circle"></i> <span id="what-is-title">What is OpenCV?</span></h2>
+                <p id="what-is-text">OpenCV is like eyes for a computer. It helps programs see and understand images and videos. Imagine your drone needs to avoid trees - OpenCV can help it see the trees!</p>
+                
+                <h2><i class="fas fa-lightbulb"></i> <span id="how-learn-title">How will we learn?</span></h2>
+                <p id="how-learn-text">We will learn by doing! Each lesson gives you small pieces of code. You will learn to make your drone see people, trees, and birds. You will change backgrounds - like putting your office instead of a beach.</p>
+                
+                <h2><i class="fas fa-tools"></i> <span id="tools-title">What you need</span></h2>
+                <p id="tools-text">Just repeat the code, memorize the commands, and try to complete the task. This course teaches coding.<br>Later, we'll add a simulator for visualizing the code on real images.</p>
+            </div>
+            
+            <div class="next-lesson">
+                <a href="lesson2.html" class="btn-next">
+                    <span id="next-text">Next Lesson</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <button class="btn-change-lang" onclick="window.location.href='index.html'">
+                <i class="fas fa-globe"></i>
+                <span id="change-lang-text">Change Language</span>
+            </button>
+            <p></p>
+            <p>© Olha Bondarieva</p>
+            <p>© Mykhailo Bondariev-Hapon</p>
+        </footer>
+    </div>
+    
+    <script src="lang.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Отмечаем урок 1 как пройденный
+        markLessonComplete(1);
+    </script>
+</body>
+</html>
