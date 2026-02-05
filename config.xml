@@ -28,7 +28,7 @@
         <preference name="SplashScreen" value="screen" />
         <preference name="SplashScreenDelay" value="3000" />
         <preference name="SplashScreenBackgroundColor" value="#80a7ae" />
-        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/drawable/ic_cdv_splashscreen.xml" />
+    
         <preference name="AndroidWindowSplashScreenBackground" value="#80a7ae" />
       
         <icon density="ldpi" src="resources/android/icon/drawable-ldpi-icon.png" />

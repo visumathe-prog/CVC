@@ -15,7 +15,7 @@ jobs:
 
       - name: Build APKs
         run: |
-          docker run --rm -v $(pwd):/app beevelop/cordova:latest bash -c "
+          docker run --rm -v $(pwd):/app beevelop/cordova bash -c "
             cd /app
             npm install
             cordova build android
